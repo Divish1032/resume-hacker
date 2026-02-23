@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-02-23
+
+### Added
+
+- **Dark Mode** — Implemented system-aware dark mode utilizing `next-themes` and a polished, dynamic color palette.
+- **Job Application Tracker** — Added a dedicated dashboard to track job applications (Company, Title, Status, Link) directly within the app.
+- **Multi-Resume Management** — Introduced a new LocalStorage infrastructure to save, load, and manage multiple resume drafts without losing your session data.
+- **Mobile Navigation Stepper** — Replaced the crowded 3-column layout on mobile with a clean, step-by-step navigation bar.
+- **AI Deep Links** — Added one-tap quick launch buttons that copy prompts to clipboard and instantly open mobile AI apps like ChatGPT, Claude, and Gemini.
+
+### Changed
+
+- **Responsive Header** — Intelligent wrapping and stacking for controls on smaller screens prevents UI overlaps.
+- **Auto-Switch to Results** — The application now automatically scrolls and switches to the generated results tab on mobile after generating.
+
+---
+
 ## [1.1.1] - 2026-02-23
 
 ### Added
