@@ -108,6 +108,7 @@ export default function Home() {
   const [jobText, setJobText] = useState<string>("");
   const [configuredProviders, setConfiguredProviders] = useState<Record<string, boolean>>({});
   const [showKeyBanner, setShowKeyBanner] = useState(false);
+  const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
 
   // ATS scores
   const preAtsScore = useMemo(() => {
@@ -319,6 +320,7 @@ export default function Home() {
       setZone3Tab("cover-letter");
       await clComplete(clPrompt);
     }
+    if (typeof window !== "undefined" && window.innerWidth < 1024) setMobileStep(3);
   };
 
   const handleClRegenerate = async () => {
@@ -341,6 +343,7 @@ export default function Home() {
       setCompletion("");
       await complete(prompt);
     }
+    if (typeof window !== "undefined" && window.innerWidth < 1024) setMobileStep(3);
   };
 
   const hasOutput = provider !== "prompt-only" && (completion || isLoading);
@@ -420,58 +423,52 @@ export default function Home() {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto justify-end">
             {/* Provider */}
-            <div className="flex items-center gap-1.5">
-              <Label className="text-xs text-slate-500 shrink-0">Provider</Label>
+            <div className="flex items-center gap-1.5 min-w-[110px] xs:min-w-[120px]">
+              <Label className="text-[10px] xs:text-xs text-slate-500 shrink-0 hidden sm:inline">Provider</Label>
               <Select value={provider} onValueChange={(v) => handleProviderChange(v as typeof provider)}>
-                <SelectTrigger className="h-8 w-32 text-xs border-slate-200">
+                <SelectTrigger className="h-8 flex-1 sm:w-32 text-[10px] xs:text-xs border-slate-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="prompt-only">Prompt Only</SelectItem>
+                  <SelectItem value="prompt-only" className="text-xs">Prompt Only</SelectItem>
                   {isOllamaAvailable && (
-                    <SelectItem value="ollama">Ollama (Local)</SelectItem>
+                    <SelectItem value="ollama" className="text-xs">Ollama (Local)</SelectItem>
                   )}
-                  <SelectItem value="openai">OpenAI</SelectItem>
-                  <SelectItem value="anthropic">Anthropic</SelectItem>
-                  <SelectItem value="google">Gemini</SelectItem>
-                  <SelectItem value="deepseek">DeepSeek</SelectItem>
+                  <SelectItem value="openai" className="text-xs">OpenAI</SelectItem>
+                  <SelectItem value="anthropic" className="text-xs">Anthropic</SelectItem>
+                  <SelectItem value="google" className="text-xs">Gemini</SelectItem>
+                  <SelectItem value="deepseek" className="text-xs">DeepSeek</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* API Key */}
-            {["openai", "anthropic", "google", "deepseek"].includes(provider) && (
-              <div className="flex items-center gap-1.5">
-                <Label className="text-xs text-slate-500 shrink-0">
-                  API Key
-                  {configuredProviders[provider] && !apiKey && (
-                    <span className="ml-1.5 text-[9px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded font-medium">.env</span>
-                  )}
-                </Label>
-                <div className="flex items-center gap-1">
-                  <Input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setApiKey(val);
-                      if (typeof window !== "undefined") {
-                        if (val) {
-                          localStorage.setItem(`rh_apikey_${provider}`, val);
-                          // Show security banner the first time a key is typed
-                          if (!localStorage.getItem("rh_key_banner_dismissed")) setShowKeyBanner(true);
-                        } else {
-                          localStorage.removeItem(`rh_apikey_${provider}`);
-                        }
-                      }
-                    }}
-                    placeholder={configuredProviders[provider] ? "Override…" : "sk-..."}
-                    className="h-8 w-32 text-xs border-slate-200"
-                  />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+            {/* API Key / Model Group */}
+            {provider !== "prompt-only" && (
+              <div className="flex items-center gap-2 sm:gap-3">
+                {["openai", "anthropic", "google", "deepseek"].includes(provider) && (
+                  <div className="flex items-center gap-1.5 min-w-[130px] xs:min-w-[140px]">
+                    <Label className="text-[10px] xs:text-xs text-slate-500 shrink-0 hidden sm:inline">Key</Label>
+                    <div className="flex items-center gap-1 flex-1">
+                      <Input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setApiKey(val);
+                          if (typeof window !== "undefined") {
+                            if (val) {
+                              localStorage.setItem(`rh_apikey_${provider}`, val);
+                              if (!localStorage.getItem("rh_key_banner_dismissed")) setShowKeyBanner(true);
+                            } else {
+                              localStorage.removeItem(`rh_apikey_${provider}`);
+                            }
+                          }
+                        }}
+                        placeholder={configuredProviders[provider] ? "Env setup" : "sk-..."}
+                        className="h-8 flex-1 sm:w-32 text-[10px] xs:text-xs border-slate-200"
+                      />
                       <button
                         type="button"
                         onClick={async () => {
@@ -486,119 +483,114 @@ export default function Home() {
                             else toast.warning("Clipboard is empty.");
                           } catch { toast.info("Clipboard denied — paste manually."); }
                         }}
-                        className="h-8 w-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
+                        className="h-7 w-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:text-indigo-600 hover:bg-white transition-colors"
                       >
-                        <ClipboardPaste className="w-3.5 h-3.5" />
+                        <ClipboardPaste className="w-3 h-3" />
                       </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Paste API key from clipboard</TooltipContent>
-                  </Tooltip>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-[10px] xs:text-xs text-slate-500 shrink-0 hidden sm:inline">Model</Label>
+                  <Select
+                    value={isCustomModel ? "__custom__" : selectedModel}
+                    onValueChange={(val) => {
+                      if (val === "__custom__") {
+                        setIsCustomModel(true);
+                        setSelectedModel(customModelInput || "");
+                      } else {
+                        setIsCustomModel(false);
+                        setCustomModelInput("");
+                        setSelectedModel(val);
+                        localStorage.setItem(`rh_model_${provider}`, val);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-28 xs:w-32 sm:w-36 text-[10px] xs:text-xs border-slate-200">
+                      <SelectValue>
+                        {isCustomModel ? (customModelInput || "Custom") : selectedModel}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getModelOptions().map((m) => (
+                        <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                      ))}
+                      <SelectItem value="__custom__" className="text-xs text-indigo-600 font-medium">✏️ Custom…</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             )}
 
-            {/* Model */}
-            {provider !== "prompt-only" && (
-              <div className="flex items-center gap-1.5">
-                <Label className="text-xs text-slate-500 shrink-0">Model</Label>
-                {provider === "ollama" && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button onClick={fetchOllamaModels} disabled={isRefreshingModels} className="text-slate-400 hover:text-indigo-500">
-                        <RefreshCw className={`w-3 h-3 ${isRefreshingModels ? "animate-spin" : ""}`} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Refresh models</TooltipContent>
-                  </Tooltip>
-                )}
-                <Select
-                  value={isCustomModel ? "__custom__" : selectedModel}
-                  onValueChange={(val) => {
-                    if (val === "__custom__") {
-                      setIsCustomModel(true);
-                      setSelectedModel(customModelInput || "");
-                    } else {
-                      setIsCustomModel(false);
-                      setCustomModelInput("");
-                      setSelectedModel(val);
-                      localStorage.setItem(`rh_model_${provider}`, val);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-8 w-36 text-xs border-slate-200">
-                    <SelectValue>
-                      {isCustomModel
-                        ? <span className="text-indigo-600 font-medium truncate">{customModelInput || "Custom…"}</span>
-                        : selectedModel}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getModelOptions().map((m) => {
-                      const installed = provider !== "ollama" || ollamaModels.includes(m);
-                      return (
-                        <SelectItem key={m} value={m} className={!installed ? "text-slate-400" : ""}>
-                          {m}{!installed && <DownloadCloud className="w-3 h-3 ml-1 inline opacity-50" />}
-                        </SelectItem>
-                      );
-                    })}
-                    <SelectItem value="__custom__" className="text-indigo-600 font-medium border-t border-slate-100 mt-1 pt-1">
-                      ✏️ Custom model name…
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Custom model text input */}
-                {isCustomModel && (
-                  <input
-                    autoFocus
-                    type="text"
-                    value={customModelInput}
-                    onChange={(e) => {
-                      setCustomModelInput(e.target.value);
-                      setSelectedModel(e.target.value);
-                    }}
-                    onBlur={() => {
-                      if (customModelInput.trim()) {
-                        localStorage.setItem(`rh_model_${provider}`, customModelInput.trim());
-                        toast.success(`Model saved: ${customModelInput.trim()}`);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") { setIsCustomModel(false); setCustomModelInput(""); const m = getModelOptions(); setSelectedModel(m[0] ?? ""); }
-                    }}
-                    placeholder="e.g. gpt-4o-mini"
-                    className="h-8 w-32 px-2 text-xs border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white text-slate-800 placeholder:text-slate-400"
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Generate */}
+            {/* Generate Button */}
             <Button
               onClick={handleGenerate}
               disabled={!canGenerate}
               size="sm"
-              className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 shadow-sm"
+              className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 xs:px-4 sm:px-5 shadow-sm ml-auto sm:ml-0"
             >
-              {isLoading
-                ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Optimizing…</>
-                : <><Zap className="w-3.5 h-3.5 mr-1.5" />{provider === "prompt-only" ? "Generate Prompt" : "Optimize Resume"}</>
-              }
+              {isLoading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <>
+                  <Zap className="w-3.5 h-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">
+                    {provider === "prompt-only" ? "Generate Prompt" : "Optimize Resume"}
+                  </span>
+                </>
+              )}
             </Button>
           </div>
         </div>
       </header>
 
+      {/* ── Mobile Stepper Navigation ── */}
+      <div className="lg:hidden bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-14 z-40">
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full">
+          {[1, 2, 3].map((step) => (
+            <button
+              key={step}
+              onClick={() => setMobileStep(step as 1 | 2 | 3)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-bold rounded-lg transition-all ${
+                mobileStep === step
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              <span className={`w-4 h-4 rounded-full flex items-center justify-center border ${
+                mobileStep === step ? "bg-indigo-600 border-indigo-600 text-white" : "border-slate-300"
+              }`}>
+                {step}
+              </span>
+              <span className="hidden xs:inline">
+                {step === 1 ? "Resume" : step === 2 ? "Jobs" : "Result"}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── 3-Zone Layout ───────────────────────────────────────────── */}
-      <main className="max-w-[1600px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-3.5rem)]">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-3.5rem)] overflow-y-auto lg:overflow-hidden">
 
         {/* ── ZONE 1: Resume Form ──────────────────────────────────── */}
-        <ZoneCard accent="bg-indigo-500" title={<><span className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">1</span> Your Resume</>}>
-          <ResumeForm onDataChange={setResumeData} provider={provider} model={selectedModel} apiKey={apiKey} />
-        </ZoneCard>
+        <div className={`${mobileStep === 1 ? "block" : "hidden lg:block"} h-full`}>
+          <ZoneCard accent="bg-indigo-500" title={<><span className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[10px] font-bold shrink-0">1</span> Your Resume</>} className="h-full">
+            <ResumeForm onDataChange={setResumeData} provider={provider} model={selectedModel} apiKey={apiKey} />
+            
+            {/* Mobile Footer Nav */}
+            <div className="lg:hidden pt-4 mt-4 border-t border-slate-100 flex justify-end">
+              <Button onClick={() => setMobileStep(2)} className="bg-indigo-600 text-white gap-2">
+                Next: Job Details <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </ZoneCard>
+        </div>
 
-        {/* ── ZONE 2: Job Description + Settings ──────────────────── */}
-        <ZoneCard accent="bg-rose-500" title={<><span className="w-5 h-5 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 text-[10px] font-bold shrink-0">2</span> Job Description</>}>
+        {/* ── ZONE 2: Job Description ──────────────────── */}
+        <div className={`${mobileStep === 2 ? "block" : "hidden lg:block"} h-full`}>
+          <ZoneCard accent="bg-rose-500" title={<><span className="w-5 h-5 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 text-[10px] font-bold shrink-0">2</span> Job Description</>} className="h-full">
 
           <JobDescriptionForm onDataChange={handleJobDataChange} />
 
@@ -615,10 +607,10 @@ export default function Home() {
               className="w-full"
             />
             <p className="text-[10px] text-slate-400">
-              {fabricationLevel[0] < 20 ? "Strict — only rephrase existing content"
-                : fabricationLevel[0] < 50 ? "Moderate — infer implied skills"
-                : fabricationLevel[0] < 80 ? "Aggressive — embellish for ATS fit"
-                : "Maximum — target 100% ATS match"}
+              {fabricationLevel[0] < 20 ? "Strict — only rephrase"
+                : fabricationLevel[0] < 50 ? "Moderate — imply skills"
+                : fabricationLevel[0] < 80 ? "Aggressive — embellish"
+                : "Maximum — 100% ATS match"}
             </p>
           </div>
 
@@ -633,21 +625,30 @@ export default function Home() {
               >
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
                   <TrendingUp className="w-3.5 h-3.5 text-rose-500" />
-                  Current ATS Score Breakdown
+                  ATS Breakdown
                 </div>
                 <AtsReport score={preAtsScore!} />
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* No prompt output in Zone 2 — it lives in Zone 3 */}
-        </ZoneCard>
+            {/* Mobile Footer Nav */}
+            <div className="lg:hidden pt-4 mt-4 border-t border-slate-100 flex justify-between gap-3">
+              <Button variant="outline" onClick={() => setMobileStep(1)} className="gap-2">
+                Back
+              </Button>
+              <Button onClick={() => setMobileStep(3)} className="bg-rose-600 hover:bg-rose-700 text-white gap-2">
+                {canGenerate ? "Review Analysis" : "Next Step"} <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </ZoneCard>
+        </div>
 
         {/* ── ZONE 3: Results (tabbed) ────────────────────────────── */}
-        <div ref={zone3Ref} className={`rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col`}>
+        <div ref={zone3Ref} className={`${mobileStep === 3 ? "block" : "hidden lg:block"} rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full`}>
           <div className={`h-1 ${zone3Tab === "cover-letter" ? "bg-violet-500" : "bg-emerald-500"}`} />
           {/* Tab bar header */}
-          <div className="border-b border-slate-100 flex items-center px-2">
+          <div className="border-b border-slate-100 flex items-center px-2 shrink-0">
             <button
               onClick={() => setZone3Tab("resume")}
               className={`flex items-center gap-1.5 px-3 py-3 text-xs font-semibold border-b-2 transition-colors mr-1 ${
@@ -675,7 +676,7 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar">
 
             {/* ─── Resume Tab ──────────────────────────────────────────── */}
             {zone3Tab === "resume" && (
@@ -770,6 +771,50 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="p-3 text-xs font-mono text-slate-500 max-h-48 overflow-y-auto whitespace-pre-wrap custom-scrollbar bg-white">{generatedPrompt}</div>
+                    </div>
+                    
+                    {/* Mobile Quick Apps */}
+                    <div className="lg:hidden grid grid-cols-2 gap-2 mt-2">
+                       <Button variant="outline" className="h-9 text-xs border-indigo-100 text-indigo-700 bg-indigo-50/50"
+                        onClick={() => {
+                          const text = generatedPrompt;
+                          navigator.clipboard.writeText(text);
+                          toast.success("Prompt copied!");
+                          // Attempt deep link, fallback to web
+                          window.location.href = "chatgpt://";
+                          setTimeout(() => { if (document.hasFocus()) window.open(`https://chatgpt.com/?q=${encodeURIComponent(text)}`, "_blank"); }, 300);
+                        }}>
+                        🟢 ChatGPT
+                      </Button>
+                      <Button variant="outline" className="h-9 text-xs border-orange-100 text-orange-700 bg-orange-50/50"
+                        onClick={() => {
+                          const text = generatedPrompt;
+                          navigator.clipboard.writeText(text);
+                          toast.success("Prompt copied!");
+                          window.location.href = "claude://";
+                          setTimeout(() => { if (document.hasFocus()) window.open("https://claude.ai/new", "_blank"); }, 300);
+                        }}>
+                        🟠 Claude
+                      </Button>
+                      <Button variant="outline" className="h-9 text-xs border-blue-100 text-blue-700 bg-blue-50/50"
+                        onClick={() => {
+                          const text = generatedPrompt;
+                          navigator.clipboard.writeText(text);
+                          toast.success("Prompt copied!");
+                          window.location.href = "google-gemini://";
+                          setTimeout(() => { if (document.hasFocus()) window.open("https://gemini.google.com/app", "_blank"); }, 300);
+                        }}>
+                        🟣 Gemini
+                      </Button>
+                      <Button variant="outline" className="h-9 text-xs border-slate-200 text-slate-600"
+                        onClick={() => {
+                          const text = generatedPrompt;
+                          navigator.clipboard.writeText(text);
+                          toast.success("Prompt copied!");
+                          window.open(`https://www.perplexity.ai/?q=${encodeURIComponent(text)}`, "_blank");
+                        }}>
+                        🔵 Perplexity
+                      </Button>
                     </div>
                     <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
                       <p className="text-xs font-semibold text-amber-800 mb-1.5 flex items-center gap-1.5">
