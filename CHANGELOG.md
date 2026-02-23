@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-02-24
+
+### Added
+
+- **Full Session Persistence** — Saving a resume now preserves the complete optimization session, including the original resume baseline and target Job Description. This ensures perfect context synchronization when switching to the Interview Prep and Networking modules.
+
+### Fixed
+
+- **Optimizer Layout Width** — Corrected header width constraints to span `w-full` instead of fixed max-widths, improving layout fluidity.
+- **Save to Tracker Action** — Fixed an issue with the plus icon and `addApplication` store logic on the Optimizer's save button.
+
+---
+
 ## [1.2.0] - 2026-02-23
 
 ### Added
