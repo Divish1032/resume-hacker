@@ -4,9 +4,13 @@ import { useAppStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, MessageSquareQuote, CheckCircle2, ChevronRight, Zap, RefreshCw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, MessageSquareQuote, CheckCircle2, ChevronRight, Zap, RefreshCw, MessageCircleQuestion, CalendarDays, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { generateInterviewQuestionsPrompt, generateStarFlashcardPrompt } from "@/lib/prompt-engine";
+import { ReverseQuestionsTab } from "@/components/features/interview/ReverseQuestionsTab";
+import { Plan306090Tab } from "@/components/features/interview/Plan306090Tab";
+import { ObjectionHandlingTab } from "@/components/features/interview/ObjectionHandlingTab";
 
 interface InterviewQuestion {
   question: string;
@@ -257,86 +261,111 @@ export default function InterviewPrepPage() {
         </div>
       )}
 
-      {questions.length > 0 && (
-        <div className="grid lg:grid-cols-2 gap-8">
-          
-          {/* Left Column: Questions List */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              Predicted Questions
-              <span className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 py-0.5 px-2.5 rounded-full text-xs font-bold">{questions.length}</span>
-            </h3>
-            
-            <div className="space-y-3">
-              {questions.map((q, idx) => (
-                <Card 
-                  key={idx} 
-                  className={`cursor-pointer transition-all hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md ${selectedQuestion?.question === q.question ? 'border-violet-500 ring-1 ring-violet-500 shadow-md bg-violet-50/50 dark:bg-violet-900/10' : 'bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800'}`}
-                  onClick={() => generateStarFlashcard(q)}
-                >
-                  <CardContent className="p-4 sm:p-5">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="space-y-2 flex-1">
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 rounded-sm">
-                          {q.type}
-                        </span>
-                        <h4 className="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-snug">{q.question}</h4>
-                        <p className="text-xs text-slate-500 italic">Why they ask: {q.reasoning}</p>
-                      </div>
-                      <ChevronRight className={`w-5 h-5 shrink-0 transition-transform ${selectedQuestion?.question === q.question ? 'text-violet-500' : 'text-slate-300 group-hover:text-violet-400'}`} />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+      {isReady && questions.length > 0 && (
+        <Tabs defaultValue="mock" className="space-y-8">
+          <div className="flex justify-center flex-wrap">
+            <TabsList className="bg-slate-100 dark:bg-slate-900/50 p-1 border border-slate-200 dark:border-slate-800">
+              <TabsTrigger value="mock" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800">Mock Interview</TabsTrigger>
+              <TabsTrigger value="reverse" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 flex items-center gap-2"><MessageCircleQuestion className="w-4 h-4 text-indigo-500"/> Reverse Questions</TabsTrigger>
+              <TabsTrigger value="plan" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 flex items-center gap-2"><CalendarDays className="w-4 h-4 text-emerald-500" /> 30-60-90 Plan</TabsTrigger>
+              <TabsTrigger value="objection" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-rose-500"/> Defense Scripts</TabsTrigger>
+            </TabsList>
           </div>
 
-          {/* Right Column: STAR Flashcard */}
-          <div className="space-y-4 lg:sticky lg:top-20 self-start">
-             <h3 className="font-semibold text-slate-900 dark:text-white">STAR Method Answer Builder</h3>
-             
-             {!selectedQuestion ? (
-               <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 border-dashed rounded-2xl h-[400px] flex items-center justify-center text-center p-8">
-                 <div className="space-y-2">
-                   <CheckCircle2 className="w-8 h-8 text-slate-300 mx-auto" />
-                   <p className="text-slate-500 font-medium">Select a question</p>
-                   <p className="text-xs text-slate-400">We'll help you build an answer using your resume experience.</p>
-                 </div>
-               </div>
-             ) : isGeneratingStar ? (
-               <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl h-[400px] flex flex-col items-center justify-center p-8 shadow-sm">
-                 <RefreshCw className="w-8 h-8 text-violet-500 animate-spin mb-4" />
-                 <p className="text-slate-700 dark:text-slate-300 font-medium">Crafting your answer...</p>
-                 <p className="text-xs text-slate-500 mt-2 text-center">Finding the best experience from your resume to match the STAR framework.</p>
-               </div>
-             ) : starResponse ? (
-               <div className="bg-white dark:bg-slate-950 border border-violet-200 dark:border-violet-900/50 rounded-2xl shadow-lg overflow-hidden flex flex-col">
-                 <div className="bg-violet-50 dark:bg-violet-900/20 p-5 sm:p-6 border-b border-violet-100 dark:border-violet-900/30">
-                    <h4 className="font-bold text-slate-900 dark:text-white leading-snug">&quot;{selectedQuestion.question}&quot;</h4>
-                 </div>
+          <TabsContent value="mock" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Left Column: Questions List */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                  Predicted Questions
+                  <span className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 py-0.5 px-2.5 rounded-full text-xs font-bold">{questions.length}</span>
+                </h3>
+                
+                <div className="space-y-3">
+                  {questions.map((q, idx) => (
+                    <Card 
+                      key={idx} 
+                      className={`cursor-pointer transition-all hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md ${selectedQuestion?.question === q.question ? 'border-violet-500 ring-1 ring-violet-500 shadow-md bg-violet-50/50 dark:bg-violet-900/10' : 'bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800'}`}
+                      onClick={() => generateStarFlashcard(q)}
+                    >
+                      <CardContent className="p-4 sm:p-5">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="space-y-2 flex-1">
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 rounded-sm">
+                              {q.type}
+                            </span>
+                            <h4 className="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-snug">{q.question}</h4>
+                            <p className="text-xs text-slate-500 italic">Why they ask: {q.reasoning}</p>
+                          </div>
+                          <ChevronRight className={`w-5 h-5 shrink-0 transition-transform ${selectedQuestion?.question === q.question ? 'text-violet-500' : 'text-slate-300 group-hover:text-violet-400'}`} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column: STAR Flashcard */}
+              <div className="space-y-4 lg:sticky lg:top-20 self-start">
+                 <h3 className="font-semibold text-slate-900 dark:text-white">STAR Method Answer Builder</h3>
                  
-                 <div className="p-5 sm:p-6 space-y-5">
-                   {/* STAR Elements */}
-                   <div className="space-y-4">
-                     <StarSection letter="S" title="Situation" content={starResponse.situation} color="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" />
-                     <StarSection letter="T" title="Task" content={starResponse.task} color="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400" />
-                     <StarSection letter="A" title="Action" content={starResponse.action} color="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400" />
-                     <StarSection letter="R" title="Result" content={starResponse.result} color="bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400" />
+                 {!selectedQuestion ? (
+                   <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 border-dashed rounded-2xl h-[400px] flex items-center justify-center text-center p-8">
+                     <div className="space-y-2">
+                       <CheckCircle2 className="w-8 h-8 text-slate-300 mx-auto" />
+                       <p className="text-slate-500 font-medium">Select a question</p>
+                       <p className="text-xs text-slate-400">We'll help you build an answer using your resume experience.</p>
+                     </div>
                    </div>
-                   
-                   {/* Tips */}
-                   <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 -mx-6 -mb-6 p-6">
-                     <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Delivery Tips</p>
-                     <p className="text-sm text-slate-700 dark:text-slate-300 italic flex items-start gap-2">
-                       <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                       {starResponse.tips}
-                     </p>
+                 ) : isGeneratingStar ? (
+                   <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl h-[400px] flex flex-col items-center justify-center p-8 shadow-sm">
+                     <RefreshCw className="w-8 h-8 text-violet-500 animate-spin mb-4" />
+                     <p className="text-slate-700 dark:text-slate-300 font-medium">Crafting your answer...</p>
+                     <p className="text-xs text-slate-500 mt-2 text-center">Finding the best experience from your resume to match the STAR framework.</p>
                    </div>
-                 </div>
-               </div>
-             ) : null}
-          </div>
-        </div>
+                 ) : starResponse ? (
+                   <div className="bg-white dark:bg-slate-950 border border-violet-200 dark:border-violet-900/50 rounded-2xl shadow-lg overflow-hidden flex flex-col">
+                     <div className="bg-violet-50 dark:bg-violet-900/20 p-5 sm:p-6 border-b border-violet-100 dark:border-violet-900/30">
+                        <h4 className="font-bold text-slate-900 dark:text-white leading-snug">&quot;{selectedQuestion.question}&quot;</h4>
+                     </div>
+                     
+                     <div className="p-5 sm:p-6 space-y-5">
+                       {/* STAR Elements */}
+                       <div className="space-y-4">
+                         <StarSection letter="S" title="Situation" content={starResponse.situation} color="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" />
+                         <StarSection letter="T" title="Task" content={starResponse.task} color="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400" />
+                         <StarSection letter="A" title="Action" content={starResponse.action} color="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400" />
+                         <StarSection letter="R" title="Result" content={starResponse.result} color="bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400" />
+                       </div>
+                       
+                       {/* Tips */}
+                       <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 -mx-6 -mb-6 p-6">
+                         <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Delivery Tips</p>
+                         <p className="text-sm text-slate-700 dark:text-slate-300 italic flex items-start gap-2">
+                           <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                           {starResponse.tips}
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+                 ) : null}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reverse" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+            <ReverseQuestionsTab />
+          </TabsContent>
+
+          <TabsContent value="plan" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+            <Plan306090Tab />
+          </TabsContent>
+
+          <TabsContent value="objection" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+            <ObjectionHandlingTab />
+          </TabsContent>
+          
+        </Tabs>
       )}
     </div>
   );

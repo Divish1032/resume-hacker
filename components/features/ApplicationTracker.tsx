@@ -16,8 +16,13 @@ import {
   Link as LinkIcon, 
   Edit2, 
   ExternalLink, 
-  Zap 
+  Zap,
+  Mail,
+  Copy,
+  RefreshCw 
 } from "lucide-react";
+import { useFollowUpAI } from "@/hooks/useFollowUpAI";
+import { generateFollowUpEmailPrompt } from "@/lib/prompt-engine";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
@@ -37,9 +42,37 @@ interface ApplicationTrackerProps {
 
 export function ApplicationTracker({ onClose, isModal = true, onUpdate }: ApplicationTrackerProps) {
   const router = useRouter();
+  const { resumeData, provider } = useAppStore();
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingApp, setEditingApp] = useState<Partial<JobApplication>>({});
+  
+  const [activeFollowUpApp, setActiveFollowUpApp] = useState<JobApplication | null>(null);
+  const [followUpResponse, setFollowUpResponse] = useState<{subject: string, body: string} | null>(null);
+  const { generateWithAI, isLoading, error } = useFollowUpAI();
+
+  const startFollowUp = async (app: JobApplication) => {
+    setActiveFollowUpApp(app);
+    setFollowUpResponse(null);
+    if (!resumeData) {
+      toast.error("Please load a resume in the Optimizer first.");
+      return;
+    }
+
+    const days = Math.max(0, Math.floor((Date.now() - app.date) / (1000 * 60 * 60 * 24)));
+    const prompt = generateFollowUpEmailPrompt(resumeData, { text: `${app.title} at ${app.company}. ${app.notes}` }, days);
+    
+    if (provider === "prompt-only") {
+      setFollowUpResponse({
+        subject: "(Prompt Only Mode) Required AI Prompt:",
+        body: prompt
+      });
+      return;
+    }
+
+    const res = await generateWithAI(prompt);
+    if (res) setFollowUpResponse(res);
+  };
 
   useEffect(() => {
     refreshApps();
@@ -132,7 +165,59 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
 
         {/* Content */}
         <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-          {isEditing ? (
+          {activeFollowUpApp ? (
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 space-y-4">
+              <div className="flex items-center justify-between mb-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-emerald-500" />
+                    1-Click Follow Up
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">Generating a personalized email for {activeFollowUpApp.company}</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setActiveFollowUpApp(null)}>Close</Button>
+              </div>
+
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                   <RefreshCw className="w-8 h-8 text-emerald-500 animate-spin mb-4" />
+                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Writing custom follow up...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8 text-red-500">
+                  <p className="text-sm">{error}</p>
+                  <Button variant="outline" size="sm" className="mt-4 border-red-200 text-red-700" onClick={() => startFollowUp(activeFollowUpApp)}>Try Again</Button>
+                </div>
+              ) : followUpResponse ? (
+                <div className="space-y-4">
+                  <div className="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                     <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Subject</p>
+                     <p className="text-sm font-medium text-slate-900 dark:text-white mb-4">{followUpResponse.subject}</p>
+                     
+                     <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Body</p>
+                     <div className="text-sm text-slate-700 dark:text-slate-300 font-serif whitespace-pre-wrap">
+                       {followUpResponse.body}
+                     </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button 
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Subject: ${followUpResponse.subject}\n\n${followUpResponse.body}`);
+                        toast.success("Copied to clipboard!");
+                      }}
+                    >
+                      <Copy className="w-4 h-4 mr-2" /> Copy Email
+                    </Button>
+                    <Button variant="outline" onClick={() => startFollowUp(activeFollowUpApp)}>
+                      <RefreshCw className="w-4 h-4 mr-2" /> Regenerate
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : isEditing ? (
             <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-slate-900 dark:text-white">
@@ -263,6 +348,24 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>Load into Optimizer</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-slate-400 hover:text-emerald-500"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    startFollowUp(app);
+                                  }}
+                                >
+                                  <Mail className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>1-Click Follow Up</TooltipContent>
                             </Tooltip>
 
                             <Tooltip>

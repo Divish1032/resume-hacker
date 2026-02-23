@@ -4,10 +4,12 @@ import { useAppStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Network, Copy, CheckCircle2, RefreshCw, Briefcase, UserCircle, Send } from "lucide-react";
+import { Loader2, Network, Copy, CheckCircle2, RefreshCw, Briefcase, UserCircle, Send, Target, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { generateNetworkingPrompt } from "@/lib/prompt-engine";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HiringManagerTab } from "@/components/features/networking/HiringManagerTab";
+import { PainPointOutreachTab } from "@/components/features/networking/PainPointOutreachTab";
 
 interface OutreachTemplate {
   type: string;
@@ -131,181 +133,201 @@ export default function NetworkingPage() {
         </Button>
       </div>
 
-      {(!isReady) && !isGenerating && !response && (
-        <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl p-6 text-center max-w-2xl mx-auto mt-12">
-          <p className="text-amber-800 dark:text-amber-400 font-medium mb-4">
-            You need an active Resume to use the Networking tools.
-          </p>
-          <p className="text-sm text-amber-700 dark:text-amber-500/70 mb-6">
-            Head over to the Optimizer and load your resume first. Adding a target Job Description will customize the outreach templates specifically for that role!
-          </p>
-          <Button variant="outline" className="bg-white dark:bg-slate-950 border-amber-200 dark:border-amber-800" onClick={() => window.location.href = '/optimizer'}>
-            Go to Optimizer
-          </Button>
-        </div>
-      )}
-
-      {isReady && !isGenerating && !response && (
-        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center max-w-3xl mx-auto shadow-sm mt-12">
-          <UserCircle className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Build Your Professional Brand</h3>
-          <p className="text-slate-500 mb-8 max-w-lg mx-auto">We'll analyze your resume to generate high-converting LinkedIn headlines, an engaging &quot;About&quot; section, and personalized outreach templates.</p>
-          
-          {networkingPrompt && provider === "prompt-only" ? (
-             <div className="space-y-4 text-left">
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
-                    <p className="text-xs font-semibold mb-2 text-blue-600 uppercase">Networking Generation Prompt</p>
-                    <pre className="text-[10px] font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">{networkingPrompt}</pre>
-                    <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="mt-3 w-full border-blue-200 text-blue-700 hover:bg-blue-50"
-                        onClick={() => {
-                            navigator.clipboard.writeText(networkingPrompt);
-                            toast.success("Prompt copied!");
-                        }}
-                    >
-                        Copy Prompt & Open AI
-                    </Button>
-                </div>
-                <div className="space-y-2">
-                    <p className="text-xs font-medium">Step 2: Paste the AI response (JSON) here</p>
-                    <textarea 
-                        className="w-full h-32 p-3 text-xs font-mono border rounded-lg dark:bg-slate-900"
-                        placeholder='{"headlines": ["..."], "about": "...", "outreach": [...] }'
-                        onChange={(e) => {
-                            try {
-                                const parsed = JSON.parse(e.target.value);
-                                if (parsed.headlines) {
-                                    setResponse(parsed);
-                                    setNetworkingPrompt("");
-                                    toast.success("Content loaded!");
-                                }
-                            } catch {
-                                // wait for valid JSON
-                            }
-                        }}
-                    />
-                </div>
-             </div>
-          ) : (
-            <Button onClick={generateNetworkingContent} size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                Generate Networking Kit
-            </Button>
-          )}
-
-          {jobData?.text && (
-             <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-4 flex items-center justify-center gap-1.5">
-               <Briefcase className="w-3.5 h-3.5" /> Will be tailored for: Your targeted job description
-             </p>
-          )}
-        </div>
-      )}
-
-      {isGenerating && (
-         <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl h-[400px] flex flex-col items-center justify-center p-8 shadow-sm">
-           <RefreshCw className="w-10 h-10 text-blue-500 animate-spin mb-6" />
-           <p className="text-lg text-slate-700 dark:text-slate-300 font-medium">Analyzing your experience...</p>
-           <p className="text-sm text-slate-500 mt-2 text-center max-w-md">Writing SEO-optimized headlines and crafting personalized networking templates.</p>
-         </div>
-      )}
-
-      {response && !isGenerating && (
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-8">
-            <TabsTrigger value="profile" className="flex items-center gap-2"><UserCircle className="w-4 h-4" /> LinkedIn Profile</TabsTrigger>
-            <TabsTrigger value="outreach" className="flex items-center gap-2"><Send className="w-4 h-4" /> Outreach Templates</TabsTrigger>
+      <Tabs defaultValue="profile_maker" className="space-y-8 mt-12 w-full">
+        <div className="flex justify-center flex-wrap">
+          <TabsList className="bg-slate-100 dark:bg-slate-900/50 p-1 border border-slate-200 dark:border-slate-800">
+            <TabsTrigger value="profile_maker" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 flex items-center gap-2"><UserCircle className="w-4 h-4 text-blue-500" /> Web Presence</TabsTrigger>
+            <TabsTrigger value="bypass" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 flex items-center gap-2"><Target className="w-4 h-4 text-fuchsia-500"/> Hiring Manager Bypass</TabsTrigger>
+            <TabsTrigger value="outreach" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 flex items-center gap-2"><Mail className="w-4 h-4 text-emerald-500" /> Pain-Point Outreach</TabsTrigger>
           </TabsList>
+        </div>
 
-          <TabsContent value="profile" className="space-y-6">
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Headlines */}
-              <Card className="lg:col-span-1 shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-                <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
-                  <CardTitle className="text-base text-slate-800 dark:text-slate-200 flex flex-col items-start gap-1">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500">Brand Taglines</span>
-                    LinkedIn Headlines
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 space-y-4">
-                  {response.headlines.map((headline, idx) => (
-                    <div key={idx} className="group relative border border-slate-200 dark:border-slate-800 rounded-lg p-3 sm:p-4 hover:border-blue-300 dark:hover:border-blue-700 transition-colors bg-white dark:bg-slate-950">
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100 leading-snug pr-8">{headline}</p>
-                      <button 
-                        onClick={() => copyToClipboard(headline, `h_${idx}`)}
-                        className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-md transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                        title="Copy headline"
+        <TabsContent value="profile_maker" className="mt-0 focus-visible:outline-none focus-visible:ring-0 space-y-8 w-full">
+          {(!isReady) && !isGenerating && !response && (
+            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl p-6 text-center max-w-2xl mx-auto mt-12">
+              <p className="text-amber-800 dark:text-amber-400 font-medium mb-4">
+                You need an active Resume to use the Networking tools.
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-500/70 mb-6">
+                Head over to the Optimizer and load your resume first. Adding a target Job Description will customize the outreach templates specifically for that role!
+              </p>
+              <Button variant="outline" className="bg-white dark:bg-slate-950 border-amber-200 dark:border-amber-800" onClick={() => window.location.href = '/optimizer'}>
+                Go to Optimizer
+              </Button>
+            </div>
+          )}
+
+          {isReady && !isGenerating && !response && (
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center max-w-3xl mx-auto shadow-sm mt-12">
+              <UserCircle className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Build Your Professional Brand</h3>
+              <p className="text-slate-500 mb-8 max-w-lg mx-auto">We'll analyze your resume to generate high-converting LinkedIn headlines, an engaging &quot;About&quot; section, and personalized outreach templates.</p>
+              
+              {networkingPrompt && provider === "prompt-only" ? (
+                 <div className="space-y-4 text-left">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <p className="text-xs font-semibold mb-2 text-blue-600 uppercase">Networking Generation Prompt</p>
+                        <pre className="text-[10px] font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">{networkingPrompt}</pre>
+                        <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="mt-3 w-full border-blue-200 text-blue-700 hover:bg-blue-50"
+                            onClick={() => {
+                                navigator.clipboard.writeText(networkingPrompt);
+                                toast.success("Prompt copied!");
+                            }}
+                        >
+                            Copy Prompt & Open AI
+                        </Button>
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-xs font-medium">Step 2: Paste the AI response (JSON) here</p>
+                        <textarea 
+                            className="w-full h-32 p-3 text-xs font-mono border rounded-lg dark:bg-slate-900"
+                            placeholder='{"headlines": ["..."], "about": "...", "outreach": [...] }'
+                            onChange={(e) => {
+                                try {
+                                    const parsed = JSON.parse(e.target.value);
+                                    if (parsed.headlines) {
+                                        setResponse(parsed);
+                                        setNetworkingPrompt("");
+                                        toast.success("Content loaded!");
+                                    }
+                                } catch {
+                                    // wait for valid JSON
+                                }
+                            }}
+                        />
+                    </div>
+                 </div>
+              ) : (
+                <Button onClick={generateNetworkingContent} size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                    Generate Networking Kit
+                </Button>
+              )}
+
+              {jobData?.text && (
+                 <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-4 flex items-center justify-center gap-1.5">
+                   <Briefcase className="w-3.5 h-3.5" /> Will be tailored for: Your targeted job description
+                 </p>
+              )}
+            </div>
+          )}
+
+          {isGenerating && (
+             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl h-[400px] flex flex-col items-center justify-center p-8 shadow-sm">
+               <RefreshCw className="w-10 h-10 text-blue-500 animate-spin mb-6" />
+               <p className="text-lg text-slate-700 dark:text-slate-300 font-medium">Analyzing your experience...</p>
+               <p className="text-sm text-slate-500 mt-2 text-center max-w-md">Writing SEO-optimized headlines and crafting personalized networking templates.</p>
+             </div>
+          )}
+
+          {response && !isGenerating && (
+            <Tabs defaultValue="profile" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-8">
+                <TabsTrigger value="profile" className="flex items-center gap-2"><UserCircle className="w-4 h-4" /> LinkedIn Profile</TabsTrigger>
+                <TabsTrigger value="outreach" className="flex items-center gap-2"><Send className="w-4 h-4" /> Outreach Templates</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="profile" className="space-y-6">
+                <div className="grid lg:grid-cols-3 gap-6">
+                  {/* Headlines */}
+                  <Card className="lg:col-span-1 shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+                    <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                      <CardTitle className="text-base text-slate-800 dark:text-slate-200 flex flex-col items-start gap-1">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500">Brand Taglines</span>
+                        LinkedIn Headlines
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-5 space-y-4">
+                      {response.headlines.map((headline, idx) => (
+                        <div key={idx} className="group relative border border-slate-200 dark:border-slate-800 rounded-lg p-3 sm:p-4 hover:border-blue-300 dark:hover:border-blue-700 transition-colors bg-white dark:bg-slate-950">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 leading-snug pr-8">{headline}</p>
+                          <button 
+                            onClick={() => copyToClipboard(headline, `h_${idx}`)}
+                            className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-md transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Copy headline"
+                          >
+                            {copiedIndex === `h_${idx}` ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* About Section */}
+                  <Card className="lg:col-span-2 shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 h-fit">
+                    <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 flex flex-row items-center justify-between">
+                      <CardTitle className="text-base text-slate-800 dark:text-slate-200 flex flex-col items-start gap-1">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500">The Story</span>
+                        &quot;About&quot; Summary
+                      </CardTitle>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="h-8 gap-1.5 text-xs text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                        onClick={() => copyToClipboard(response.about, 'about')}
                       >
-                        {copiedIndex === `h_${idx}` ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* About Section */}
-              <Card className="lg:col-span-2 shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 h-fit">
-                <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 flex flex-row items-center justify-between">
-                  <CardTitle className="text-base text-slate-800 dark:text-slate-200 flex flex-col items-start gap-1">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500">The Story</span>
-                    &quot;About&quot; Summary
-                  </CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-8 gap-1.5 text-xs text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
-                    onClick={() => copyToClipboard(response.about, 'about')}
-                  >
-                    {copiedIndex === 'about' ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedIndex === 'about' ? 'Copied' : 'Copy'}
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-5 sm:p-6">
-                  <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
-                    {response.about.split('\n').map((paragraph, i) => (
-                      paragraph.trim() ? <p key={i}>{paragraph}</p> : <br key={i} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="outreach" className="space-y-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {response.outreach.map((msg, idx) => (
-                <Card key={idx} className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col">
-                  <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
-                    <CardTitle className="text-base text-slate-800 dark:text-slate-200 flex flex-col items-start gap-1">
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500">Template</span>
-                      {msg.type}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-5 flex-1 flex flex-col">
-                    {msg.subject && (
-                      <div className="mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                        <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Subject</p>
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{msg.subject}</p>
+                        {copiedIndex === 'about' ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedIndex === 'about' ? 'Copied' : 'Copy'}
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="p-5 sm:p-6">
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
+                        {response.about.split('\n').map((paragraph, i) => (
+                          paragraph.trim() ? <p key={i}>{paragraph}</p> : <br key={i} />
+                        ))}
                       </div>
-                    )}
-                    <div className="flex-1 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 font-serif leading-relaxed">
-                      {msg.body}
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      className="w-full mt-6 flex items-center justify-center gap-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                      onClick={() => copyToClipboard(msg.body, `o_${idx}`)}
-                    >
-                      {copiedIndex === `o_${idx}` ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                      {copiedIndex === `o_${idx}` ? "Copied!" : "Copy Template"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="outreach" className="space-y-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {response.outreach.map((msg, idx) => (
+                    <Card key={idx} className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col">
+                      <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                        <CardTitle className="text-base text-slate-800 dark:text-slate-200 flex flex-col items-start gap-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-blue-500">Template</span>
+                          {msg.type}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-5 flex-1 flex flex-col">
+                        {msg.subject && (
+                          <div className="mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Subject</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{msg.subject}</p>
+                          </div>
+                        )}
+                        <div className="flex-1 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300 font-serif leading-relaxed">
+                          {msg.body}
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          className="w-full mt-6 flex items-center justify-center gap-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                          onClick={() => copyToClipboard(msg.body, `o_${idx}`)}
+                        >
+                          {copiedIndex === `o_${idx}` ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                          {copiedIndex === `o_${idx}` ? "Copied!" : "Copy Template"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </TabsContent>
+
+        <TabsContent value="bypass" className="mt-0 focus-visible:outline-none focus-visible:ring-0 w-full">
+            <HiringManagerTab />
+        </TabsContent>
+
+        <TabsContent value="outreach" className="mt-0 focus-visible:outline-none focus-visible:ring-0 w-full">
+            <PainPointOutreachTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

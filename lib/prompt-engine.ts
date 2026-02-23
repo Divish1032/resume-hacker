@@ -122,6 +122,211 @@ Example output:
 `;
 }
 
+export function generateReverseQuestionsPrompt(
+  resume: ResumeData,
+  jobDescription: JobDescriptionData
+): string {
+  return `You are a strategic career advisor helping a candidate act like a high-level insider during their job interview.
+Based on the provided candidate resume and target job description, generate 3 highly strategic, impressive "Reverse Questions" for the candidate to ask the interviewer at the end of the interview.
+
+These questions should NOT be generic (e.g., "What is the culture like?"). They should:
+1. Reference specific challenges, goals, or technologies mentioned in the JD.
+2. Demonstrate that the candidate is already thinking about how to solve the company's problems within the first 90 days.
+3. Subtly position the candidate's specific background (from their resume) as the perfect fit for these challenges.
+
+[CANDIDATE RESUME]
+${JSON.stringify(resume, null, 2)}
+
+[TARGET JOB DESCRIPTION]
+${jobDescription.text}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON array of objects. Do not include any markdown formatting like \`\`\`json.
+Each object must have:
+- "question": The strategic question to ask.
+- "rationale": A brief explanation of why this question is powerful and what it signals to the interviewer.
+
+Example output:
+[
+  {
+    "question": "The JD mentions scaling the core API. Given my experience migrating legacy monoliths to microservices at [Previous Company], what is the biggest technical bottleneck your team is currently facing with that scale?",
+    "rationale": "Signals that you've solved this exact problem before and shifts the conversation from evaluating you to discussing their problems as peers."
+  }
+]
+`;
+}
+
+export function generate306090PlanPrompt(
+  resume: ResumeData,
+  jobDescription: JobDescriptionData
+): string {
+  return `You are an elite executive coach. Your task is to generate a highly specific, actionable 30-60-90 Day Plan for a candidate based on their resume and the target job description. This plan is meant to be handed to the hiring manager during the interview to prove the candidate is ready to execute immediately.
+
+[CANDIDATE RESUME]
+${JSON.stringify(resume, null, 2)}
+
+[TARGET JOB DESCRIPTION]
+${jobDescription.text}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON object. Do not include any markdown formatting like \`\`\`json.
+The object must have the following keys:
+- "title": A strong, confident title for the plan (e.g., "Strategic 90-Day Execution Plan for Senior Product Manager").
+- "day30": An array of 3-4 specific bullet points focusing on onboarding, learning the tech stack/product, and building relationships. Reference specific tools or processes from the JD.
+- "day60": An array of 3-4 specific bullet points focusing on taking ownership, early quick wins, and identifying optimization opportunities based on the candidate's past experience.
+- "day90": An array of 3-4 specific bullet points focusing on strategic impact, leading independent projects, and moving the needle on the core responsibilities listed in the JD.
+
+Example output:
+{
+  "title": "90-Day Execution Plan: Lead Frontend Engineer",
+  "day30": [
+    "Complete deep-dive into the existing React/Redux codebase and current CI/CD pipelines.",
+    "Conduct 1:1s with key stakeholders in Product and Design to align on current Q3 sprint goals."
+  ],
+  "day60": [
+    "Lead the migration of the legacy auth flow to the new Next.js architecture as an early win.",
+    "Propose a standardized component library structure to reduce design debt."
+  ],
+  "day90": [
+    "Take full ownership of frontend performance metrics, targeting a 20% improvement in LCP.",
+    "Begin mentoring junior developers on advanced React patterns."
+  ]
+}
+`;
+}
+
+export function generateObjectionHandlingPrompt(
+  resume: ResumeData,
+  jobDescription: JobDescriptionData
+): string {
+  return `You are an expert interview coach specializing in defensive interview tactics and "objection handling." 
+Compare the candidate's resume with the target job description. Identify the top 3 biggest weaknesses, missing skills, or experience gaps the candidate has for this specific role. Then, draft a persuasive, confident script for how the candidate can pivot or defend those gaps when the interviewer inevitably brings them up.
+
+[CANDIDATE RESUME]
+${JSON.stringify(resume, null, 2)}
+
+[TARGET JOB DESCRIPTION]
+${jobDescription.text}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON array of objects. Do not include any markdown formatting like \`\`\`json.
+Each object must have:
+- "objection": The likely concern the interviewer will raise (e.g., "You don't have experience with AWS.").
+- "pivot_strategy": The underlying strategy for defending this (e.g., "Pivot to parallel experience in Azure and emphasize fast learning.").
+- "script": The exact, word-for-word script the candidate should say to confidently handle the objection.
+
+Example output:
+[
+  {
+    "objection": "You haven't managed a team of this size before.",
+    "pivot_strategy": "Acknowledge the gap but pivot to cross-functional leadership and scaling processes.",
+    "script": "That's a fair observation. While technically my direct reports were capped at 5, I successfully led cross-functional pods of 15+ engineers and designers to deliver the Q4 roadmap. I've found that scaling processes and maintaining clear communication is the same discipline whether they report directly to me or not."
+  }
+]
+`;
+}
+
+export function generateHiringManagerBypassPrompt(
+  jobDescription: JobDescriptionData
+): string {
+  return `You are an expert technical recruiter and OSINT/sourcing specialist.
+Based on the provided job description, generate 3 highly targeted LinkedIn "Boolean Search Strings" that the candidate can copy-paste into LinkedIn search to find the most likely Hiring Manager (NOT a recruiter, but the actual team lead, director, or VP who needs this role filled).
+
+[TARGET JOB DESCRIPTION]
+${jobDescription.text}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON array of objects. Do not include any markdown formatting like \`\`\`json.
+Each object must have:
+- "search_string": The exact boolean string to paste into LinkedIn (e.g., ("Engineering Manager" OR "Director of Engineering") AND "Stripe" AND "Payments").
+- "target_persona": Who this string is trying to find (e.g., "The Direct Manager").
+- "rationale": Why you chose these specific keywords based on the JD.
+
+Example output:
+[
+  {
+    "search_string": "(\"VP of Engineering\" OR \"Head of Engineering\") AND \"Company Name\" AND \"React\"",
+    "target_persona": "The Department Head",
+    "rationale": "For senior roles, the VP or Head of Engineering is often the final decision maker."
+  }
+]
+`;
+}
+
+export function generatePainPointOutreachPrompt(
+  resume: ResumeData,
+  jobDescription: JobDescriptionData
+): string {
+  return `You are a world-class B2B SaaS salesperson and executive career coach. 
+Instead of sending a generic "I applied for your job" message, your strategy is to identify the hiring manager's biggest "Pain Point" from the job description and pitch the candidate's resume as the immediate solution.
+
+Read the JD to guess *why* they are hiring (e.g., scaling issues, high churn, launching a new product). Then, write 3 distinct, punchy cold outreach messages (LinkedIn Direct Messages or Cold Emails) that lead with a hypothesis about their problem and offer a specific achievement from the candidate's resume as proof they can solve it.
+
+[CANDIDATE RESUME]
+${JSON.stringify(resume, null, 2)}
+
+[TARGET JOB DESCRIPTION]
+${jobDescription.text}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON array of objects. Do not include any markdown formatting like \`\`\`json.
+Each object must have:
+- "pain_point_hypothesis": What you suspect their biggest problem is right now.
+- "subject_line": A catchy, non-salesy subject line (under 6 words). Use "N/A" if it's meant for a LinkedIn connection request.
+- "message": The cold outreach message. Keep it under 100 words. Be direct, confident, and focus entirely on solving their problem. Do NOT use generic pleasantries like "I hope this finds you well."
+
+Example output:
+[
+  {
+    "pain_point_hypothesis": "They are migrating to a microservices architecture and it's taking too long.",
+    "subject_line": "Microservices migration bottleneck?",
+    "message": "Hi [Name], I saw you're hiring for a Senior Backend Engineer to help scale the new infrastructure. I'm guessing the monolith-to-microservices migration is proving trickier than expected. At my last company, I led a similar migration that reduced latency by 40% and deploying times by half. I just submitted my application but wanted to reach out directly to see if you'd be open to a quick chat about how I tackled those bottlenecks."
+  }
+]
+`;
+}
+
+export function generateFollowUpEmailPrompt(
+  resume: ResumeData,
+  jobDescription: JobDescriptionData,
+  daysSinceApplied: number
+): string {
+  let urgencyTone = "";
+  if (daysSinceApplied <= 3) {
+    urgencyTone = "Tone: Enthusiastic, brief, just bubbling the application to the top of their inbox.";
+  } else if (daysSinceApplied <= 7) {
+    urgencyTone = "Tone: Persistent but polite, reiterating a specific piece of value from the resume.";
+  } else {
+    urgencyTone = "Tone: Direct, assuming they are struggling to find the right candidate, offering a quick win.";
+  }
+
+  return `You are an expert sales professional teaching a job seeker how to follow up on a job application.
+The candidate applied ${daysSinceApplied} days ago and hasn't heard back yet. 
+Write a short, punchy follow-up email directly to the hiring manager. 
+${urgencyTone}
+
+Do not be generic. Mention one specific, highly relevant achievement from the candidate's resume that proves they can solve the problems listed in the Job Description.
+
+[CANDIDATE RESUME]
+${JSON.stringify(resume, null, 2)}
+
+[TARGET JOB DESCRIPTION]
+${jobDescription.text}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON object. Do not include any markdown formatting like \`\`\`json.
+The object must have:
+- "subject": A brief, professional subject line.
+- "body": The email body. Keep it under 150 words.
+
+Example output:
+{
+  "subject": "Following up: Senior React Developer app / [Candidate Name]",
+  "body": "Hi [Name], I applied for the Senior React Developer role ${daysSinceApplied} days ago and wanted to follow up directly. I noticed you're specifically looking for someone to lead the migration to Next.js. I recently led a very similar migration at Acme Corp, resulting in a 3x increase in Lighthouse scores and a 20% bump in conversion. I'd love to briefly share how we avoided the common pitfalls of that transition. Let me know if you have 10 minutes this week."
+}
+`;
+}
+
 export function generatePrompt(
   resume: ResumeData,
   jobDescription: JobDescriptionData,

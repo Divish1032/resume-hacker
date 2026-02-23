@@ -89,15 +89,20 @@ export function generateCoverLetterPrompt(
     ? `[CANDIDATE'S TOP ACHIEVEMENTS — incorporate 2-3 naturally]\n${achievements.map((a) => `  • ${a}`).join("\n")}`
     : "";
 
-  return `You are an expert cover letter writer who specialises in ATS-optimised, human-first cover letters.
+  return `You are an elite executive coach who specialises in the "Pain-Point Proposition" cover letter method.
 
-Write a tailored cover letter for the following candidate applying to the role below.
+Your goal is to write a highly disruptive, attention-grabbing cover letter that skips the boring pleasantries. Instead, it must immediately diagnose the hiring manager's biggest actual problems based on the Job Description, and pitch the candidate's exact experience as the only logical solution.
 
 [TONE]
 ${TONE_INSTRUCTIONS[tone]}
+*CRITICAL:* Regardless of tone, be authoritative and confident. Do not use weak phrases like "I believe I would be a good fit," "I hope to," or "I am writing to express my interest."
 
 [LENGTH & STRUCTURE]
 ${LENGTH_INSTRUCTIONS[length]}
+*CRITICAL:* Structure the letter aggressively:
+1. The Diagnosis Hook: Call out the likely overarching problem or mandate the company is facing right now based on the JD (e.g., "You are hiring a Senior Engineer because your monolith is buckling under scale...").
+2. The Proof: Highlight 1-2 exact things the candidate has done that solve this exact problem, using hard metrics from their resume.
+3. The Execution Plan: Connect the candidate's unique skills directly to what needs to be done in the first 90 days.
 
 [CANDIDATE DETAILS]
 Name: ${candidateName}
@@ -116,13 +121,13 @@ ${jobDescription.text}
 
 [RULES]
 1. Address it to "Hiring Manager" (we don't know the name).
-2. Open with a hook — never start with "I am writing to apply for…".
+2. NEVER start with "I am writing to apply for…" or "I am excited to apply...". Start immediately with the Diagnosis Hook.
 3. Use 2-3 specific JD keywords organically — don't keyword-stuff.
-4. Reference at least one specific achievement from the candidate's background.
-5. End with a confident, polite call to action.
+4. Reference at least one specific achievement from the candidate's background that solves their pain point.
+5. End with a confident, slightly aggressive call to action (e.g., "I'd love to show you how I solved this exact problem at my last company. Do you have 15 minutes this week?").
 6. Do NOT include contact info, date, or address headers — output ONLY the letter body starting from the salutation.
 7. Output plain text, no markdown formatting, no JSON.
 
 [OUTPUT]
-Write the cover letter now:`;
+Write the aggressive Pain-Point cover letter now:`;
 }
