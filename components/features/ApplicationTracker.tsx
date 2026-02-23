@@ -91,7 +91,7 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this tracked application?")) {
+    if (window.confirm("Are you sure you want to delete this tracked application?")) {
       deleteJobApplication(id);
       refreshApps();
       toast.success("Deleted application");
@@ -219,9 +219,9 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                       <div className="min-w-0 pr-4 flex-1">
                         <h4 className="font-semibold text-slate-900 dark:text-white truncate flex items-center gap-2">
                           {app.title}
-                          {app.url && (
+                          {app.url && app.url.includes('.') && !app.url.includes(' ') && (
                             <a 
-                              href={/^https?:\/\//i.test(app.url) ? app.url : (app.url.includes('.') && !app.url.includes(' ') ? `https://${app.url}` : app.url)} 
+                              href={/^https?:\/\//i.test(app.url) ? app.url : `https://${app.url}`} 
                               target="_blank" 
                               rel="noopener noreferrer" 
                               className="text-slate-400 hover:text-indigo-500" 
@@ -250,7 +250,9 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                                   variant="ghost" 
                                   size="icon" 
                                   className="h-8 w-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                     useAppStore.getState().setJobText(app.title + (app.company ? ` at ${app.company}` : ""));
                                     useAppStore.getState().setJobData({ text: app.notes || app.title });
                                     router.push('/optimizer');
@@ -269,7 +271,11 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                                   variant="ghost" 
                                   size="icon" 
                                   className="h-8 w-8 text-slate-400 hover:text-indigo-500"
-                                  onClick={() => editApp(app)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    editApp(app);
+                                  }}
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </Button>
@@ -283,7 +289,11 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                                   variant="ghost" 
                                   size="icon" 
                                   className="h-8 w-8 text-slate-400 hover:text-red-500"
-                                  onClick={() => handleDelete(app.id)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDelete(app.id);
+                                  }}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>

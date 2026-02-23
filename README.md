@@ -11,10 +11,14 @@
 
 ## 📺 Demo
 
+> [!TIP]  
+> See the tool in action below to understand the "Resume Hacker" magic.
+
 ![Resume Hacker UI preview showing AI ATS scoring](public/screenshot.png)
 
-> [!TIP]
-> _Video coming soon! See the tool in action to understand the "Resume Hacker" magic._
+### Quick Demo
+
+![Resume Hacker Action Demo](public/demo.gif)
 
 ## ⚡ Quick Start
 

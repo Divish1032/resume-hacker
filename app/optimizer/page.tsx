@@ -321,7 +321,13 @@ export default function Home() {
         {/* ── ZONE 1: Resume Form ──────────────────────────────────── */}
         <div className={`${mobileStep === 1 ? "block" : "hidden lg:block"} h-full min-h-0`}>
           <ZoneCard accent="bg-indigo-500" title={<><span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-[10px] font-bold shrink-0">1</span> Your Resume</>} className="h-full min-h-0">
-            <ResumeForm onDataChange={store.setResumeData} provider={provider} model={selectedModel} apiKey={apiKey} />
+            <ResumeForm 
+              onDataChange={store.setResumeData} 
+              defaultValues={resumeData || undefined}
+              provider={provider} 
+              model={selectedModel} 
+              apiKey={apiKey} 
+            />
             
             {/* Mobile Footer Nav */}
             <div className="lg:hidden pt-4 mt-4 border-t border-slate-100 flex justify-end">
@@ -336,7 +342,7 @@ export default function Home() {
         <div className={`${mobileStep === 2 ? "block" : "hidden lg:block"} h-full min-h-0`}>
           <ZoneCard accent="bg-emerald-500" title={<><span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-[10px] font-bold shrink-0">2</span> Target Job</>} className="h-full min-h-0">
 
-          <JobDescriptionForm onDataChange={handleJobDataChange} />
+          <JobDescriptionForm onDataChange={handleJobDataChange} defaultValues={jobData || undefined} />
 
           {/* Fabrication slider */}
           <div className="space-y-2 pt-1">
@@ -389,16 +395,16 @@ export default function Home() {
         </div>
 
         {/* ── ZONE 3: Results (tabbed) ────────────────────────────── */}
-        <div ref={zone3Ref} className={`${mobileStep === 3 ? "block" : "hidden lg:block"} rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full`}>
+        <div ref={zone3Ref} className={`${mobileStep === 3 ? "block" : "hidden lg:block"} rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full min-h-0`}>
           <div className={`h-1 ${zone3Tab === "cover-letter" ? "bg-violet-500" : "bg-emerald-500"}`} />
           {/* Tab bar header */}
-          <div className="border-b border-slate-100 flex items-center px-2 shrink-0">
+          <div className="border-b border-slate-100 dark:border-slate-800 flex items-center px-2 shrink-0">
             <button
               onClick={() => setZone3Tab("resume")}
               className={`flex items-center gap-1.5 px-3 py-3 text-xs font-semibold border-b-2 transition-colors mr-1 ${
                 zone3Tab === "resume"
-                  ? "border-emerald-500 text-emerald-700"
-                  : "border-transparent text-slate-400 hover:text-slate-600"
+                  ? "border-emerald-500 text-emerald-700 dark:text-emerald-400"
+                  : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               }`}
             >
               <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-[9px] font-bold">3</span>
@@ -408,8 +414,8 @@ export default function Home() {
               onClick={() => setZone3Tab("cover-letter")}
               className={`flex items-center gap-1.5 px-3 py-3 text-xs font-semibold border-b-2 transition-colors ${
                 zone3Tab === "cover-letter"
-                  ? "border-violet-500 text-violet-700"
-                  : "border-transparent text-slate-400 hover:text-slate-600"
+                  ? "border-violet-500 text-violet-700 dark:text-violet-400"
+                  : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               }`}
             >
               <span className="text-base leading-none">✉️</span>
@@ -514,7 +520,7 @@ export default function Home() {
                           </Tooltip>
                         </div>
                       </div>
-                      <div className="p-3 text-xs font-mono text-slate-500 max-h-48 overflow-y-auto whitespace-pre-wrap custom-scrollbar bg-white">{generatedPrompt}</div>
+                      <div className="p-3 text-xs font-mono text-slate-500 max-h-48 overflow-y-auto whitespace-pre-wrap custom-scrollbar bg-white dark:bg-slate-900">{generatedPrompt}</div>
                     </div>
                     
                     {/* Mobile Quick Apps */}
@@ -580,7 +586,7 @@ export default function Home() {
                       <div className="p-3 space-y-2">
                         <textarea value={aiResponseText} onChange={(e) => setAiResponseText(e.target.value)}
                           placeholder="Paste the full AI response here (including the ```json block)…"
-                          className="w-full min-h-[120px] max-h-[200px] text-xs font-mono border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 resize-none custom-scrollbar bg-white text-slate-700 placeholder:text-slate-400" />
+                          className="w-full min-h-[120px] max-h-[200px] text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 resize-none custom-scrollbar bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 placeholder:text-slate-400" />
                         <div className="flex gap-2">
                           <Button size="sm" onClick={async () => { let text = aiResponseText; if (!text) { try { text = await navigator.clipboard.readText(); setAiResponseText(text); } catch { toast.info("Paste the response above first."); return; } } parseAiResponse(text); }}
                             className="h-7 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">

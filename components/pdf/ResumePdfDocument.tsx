@@ -293,7 +293,7 @@ export function ResumePdfDocument({ data }: Props) {
           )}
 
           {/* Education */}
-          {education.length > 0 && (
+          {education && education.length > 0 && (
             <View>
               <View style={styles.divider} />
               <Text style={styles.sectionHeading}>Education</Text>
@@ -354,7 +354,7 @@ export function ResumePdfDocument({ data }: Props) {
           ) : null}
 
           {/* Work Experience */}
-          {workExperience.length > 0 && (
+          {workExperience && workExperience.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.mainSectionHeading}>Experience</Text>
               {workExperience.map((job, i) => (
@@ -378,7 +378,7 @@ export function ResumePdfDocument({ data }: Props) {
           )}
 
           {/* Projects */}
-          {projects.length > 0 && (
+          {projects && projects.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.mainSectionHeading}>Projects</Text>
               {projects.map((proj, i) => (
