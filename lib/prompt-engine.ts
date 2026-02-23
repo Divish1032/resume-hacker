@@ -5,6 +5,123 @@ export interface PromptSettings {
   fabricationLevel: number; // 0 to 100
 }
 
+export function generateInterviewQuestionsPrompt(
+  resume: ResumeData,
+  jobDescription: JobDescriptionData
+): string {
+  return `You are an expert technical recruiter and hiring manager.
+Based on the provided candidate resume and target job description, generate 5 highly relevant and challenging interview questions.
+These questions should probe the candidate's specific experiences, their alignment with the role's requirements, and potential areas of weakness or gaps.
+
+[CANDIDATE RESUME]
+${JSON.stringify(resume, null, 2)}
+
+[TARGET JOB DESCRIPTION]
+${jobDescription.text}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON array of objects. Do not include any markdown formatting like \`\`\`json.
+Each object must have:
+- "question": The interview question.
+- "type": Choose one of: "Technical", "Behavioral", "Experience", or "Situational".
+- "reasoning": A brief explanation of why this question is being asked based on their resume and the JD.
+
+Example output:
+[
+  {
+    "question": "Can you walk me through your experience building scalable microservices?",
+    "type": "Technical",
+    "reasoning": "JD requires microservices experience, and resume mentions it but lacks specific scaling metrics."
+  }
+]
+`;
+}
+
+export function generateStarFlashcardPrompt(
+  resume: ResumeData,
+  jobDescription: JobDescriptionData,
+  question: string
+): string {
+  return `You are an expert interview coach helping a candidate prepare using the STAR (Situation, Task, Action, Result) method.
+Given the candidate's resume, the target job description, and a specific interview question, generate a comprehensive STAR method response that the candidate can use to answer the question effectively. Draw ONLY on experiences listed in the candidate's resume. 
+
+[INTERVIEW QUESTION]
+"${question}"
+
+[CANDIDATE RESUME]
+${JSON.stringify(resume, null, 2)}
+
+[TARGET JOB DESCRIPTION]
+${jobDescription.text}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON object. Do not include any markdown formatting like \`\`\`json.
+The object must have the following keys:
+- "situation": Setting the scene and giving necessary context.
+- "task": Describe what their responsibility was in that situation.
+- "action": Explain exactly what steps they took to address it.
+- "result": Share what outcomes their actions achieved (use metrics from the resume if available).
+- "tips": A short string with 1-2 tips on how to deliver this answer effectively.
+
+Example output:
+{
+  "situation": "Our main API was struggling under peak load, causing timeouts for 15% of our users.",
+  "task": "I was tasked with identifying the bottleneck and improving response times without rewriting the entire service.",
+  "action": "I implemented Redis caching for the most frequently accessed endpoints and optimized our primary database queries with proper indexing.",
+  "result": "API response times dropped by 70%, completely eliminating the timeout errors during peak hours.",
+  "tips": "Emphasize your proactive approach to monitoring and how you prioritized which queries to index."
+}
+`;
+}
+
+export function generateNetworkingPrompt(
+  resume: ResumeData,
+  jobDescription?: JobDescriptionData
+): string {
+  const contextInstruction = jobDescription 
+    ? `\n[TARGET JOB DESCRIPTION]\n${jobDescription.text}\n\nTailor the LinkedIn profile and outreach templates specifically to attract recruiters hiring for this exact role or similar roles.`
+    : `\nTailor the LinkedIn profile and outreach templates broadly based on the candidate's existing experience and top skills.`;
+
+  return `You are an expert career coach and LinkedIn branding specialist.
+Based on the provided candidate resume and optional target job description, generate optimized LinkedIn profile content and networking outreach templates.
+
+[CANDIDATE RESUME]
+${JSON.stringify(resume, null, 2)}
+${contextInstruction}
+
+[OUTPUT FORMAT]
+Provide your response strictly as a JSON object. Do not include any markdown formatting like \`\`\`json.
+The object must have the following keys:
+- "headlines": An array of 3 strong, SEO-optimized LinkedIn headlines (under 120 characters each).
+- "about": A compelling "About" section summary (2-3 short paragraphs) that tells their professional story, highlights key achievements, and includes a call to action.
+- "outreach": An array of 3 distinct networking templates:
+    1. "Recruiter Connection": A short, impactful connection request to a recruiter or hiring manager.
+    2. "Informational Interview": A message asking an industry peer for a brief chat.
+    3. "Follow-up": A polite follow-up message after an application or initial contact.
+
+Each outreach object in the array should have:
+  - "type": The name of the template (e.g., "Recruiter Connection").
+  - "subject": The subject line (if applicable, or empty string).
+  - "body": The message template with placeholders like [Hiring Manager Name] or [Company Name].
+
+Example output:
+{
+  "headlines": [
+    "Senior Frontend Engineer | React & Next.js Expert | Building Scalable Web Apps",
+    ...
+  ],
+  "about": "As a passionate software engineer...",
+  "outreach": [
+    {
+      "type": "Recruiter Connection",
+      "subject": "",
+      "body": "Hi [Name], I recently applied for..."
+    }
+  ]
+}
+`;
+}
+
 export function generatePrompt(
   resume: ResumeData,
   jobDescription: JobDescriptionData,
