@@ -1,43 +1,70 @@
-name: Create GitHub Release
+name: Auto Release on Merge
 
-# Triggers automatically when you push a version tag (e.g. v1.2.0)
+# Triggers on merge to main
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - main
 
 permissions:
-  contents: write # needed to create a release
+  contents: write # needed for tagging and creating releases
 
 jobs:
   release:
-    name: Publish GitHub Release
+    name: Publish Release
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # full history so we can extract changelog
+          fetch-depth: 0 # full history for changelog and tags
 
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+      - name: Get version from package.json
+        id: pkg
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if Tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "${{ steps.pkg.outputs.TAG }}" >/dev/null 2>&1; then
+            echo "EXISTS=true" >> $GITHUB_OUTPUT
+          else
+            echo "EXISTS=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Git
+        if: steps.check_tag.outputs.EXISTS == 'false'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and Push Tag
+        if: steps.check_tag.outputs.EXISTS == 'false'
+        run: |
+          git tag ${{ steps.pkg.outputs.TAG }}
+          git push origin ${{ steps.pkg.outputs.TAG }}
 
       - name: Extract release notes from CHANGELOG.md
+        if: steps.check_tag.outputs.EXISTS == 'false'
         id: notes
         run: |
-          # Pull out the block for this version from CHANGELOG.md
-          VERSION="${{ steps.version.outputs.VERSION }}"
+          VERSION="${{ steps.pkg.outputs.VERSION }}"
+          # Extract the section for this version
           awk "/^## \[$VERSION\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md > release_notes.txt
           # Trim leading/trailing blank lines
           sed -i '/./,$!d' release_notes.txt
           echo "NOTES_FILE=release_notes.txt" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
+        if: steps.check_tag.outputs.EXISTS == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          name: "v${{ steps.version.outputs.VERSION }}"
+          tag_name: ${{ steps.pkg.outputs.TAG }}
+          name: ${{ steps.pkg.outputs.TAG }}
           body_path: release_notes.txt
           draft: false
           prerelease: false
