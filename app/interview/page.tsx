@@ -24,13 +24,14 @@ interface StarResponse {
 
 export default function InterviewPrepPage() {
   const store = useAppStore();
-  const { resumeData, jobData, provider, selectedModel: model, apiKey } = store;
+  const { resumeData, jobData, provider, selectedModel: model, apiKey, isHydrated } = store;
   
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<InterviewQuestion | null>(null);
   const [starResponse, setStarResponse] = useState<StarResponse | null>(null);
   const [isGeneratingStar, setIsGeneratingStar] = useState(false);
+  const [questionsPrompt, setQuestionsPrompt] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -42,8 +43,14 @@ export default function InterviewPrepPage() {
       toast.error("Please ensure you have loaded a resume and job description in the Optimizer first.");
       return;
     }
+
+    const prompt = generateInterviewQuestionsPrompt(resumeData, jobData);
+
     if (provider === "prompt-only") {
-      toast.error("Please select an AI provider in the header to generate questions.");
+      setQuestionsPrompt(prompt);
+      setQuestions([]);
+      setSelectedQuestion(null);
+      setStarResponse(null);
       return;
     }
 
@@ -51,8 +58,6 @@ export default function InterviewPrepPage() {
     setQuestions([]);
     setSelectedQuestion(null);
     setStarResponse(null);
-
-    const prompt = generateInterviewQuestionsPrompt(resumeData, jobData);
 
     try {
       const res = await fetch("/api/generate", {
@@ -105,6 +110,16 @@ export default function InterviewPrepPage() {
 
     const prompt = generateStarFlashcardPrompt(resumeData, jobData, questionObj.question);
 
+    if (provider === "prompt-only") {
+        // For individual flashcards in prompt-only, we'll just show a toast for now 
+        // or we could show a modal with the prompt. 
+        // Let's copy it to clipboard automatically.
+        navigator.clipboard.writeText(prompt);
+        toast.success("STAR Prompt copied to clipboard! Paste it in your AI to get an answer.");
+        setIsGeneratingStar(false);
+        return;
+    }
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -151,7 +166,7 @@ export default function InterviewPrepPage() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted || !isHydrated) return null;
 
   const isReady = !!resumeData && !!jobData?.text;
 
@@ -170,13 +185,13 @@ export default function InterviewPrepPage() {
         
         <Button 
           onClick={generateQuestions} 
-          disabled={!isReady || isGeneratingQuestions || provider === "prompt-only"}
+          disabled={!isReady || isGeneratingQuestions}
           className="bg-violet-600 hover:bg-violet-700 text-white shadow-sm self-start md:self-auto"
         >
           {isGeneratingQuestions ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Profile...</>
           ) : (
-            <><Zap className="w-4 h-4 mr-2" /> {questions.length > 0 ? "Regenerate Questions" : "Generate Mock Interview"}</>
+            <><Zap className="w-4 h-4 mr-2" /> {questions.length > 0 || questionsPrompt ? "Regenerate Questions" : "Generate Mock Interview"}</>
           )}
         </Button>
       </div>
@@ -196,10 +211,49 @@ export default function InterviewPrepPage() {
           <MessageSquareQuote className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Ready to practice?</h3>
           <p className="text-slate-500 mb-6">We'll analyze your resume against the current job description to predict what they'll ask you.</p>
-          <Button onClick={generateQuestions} className="bg-violet-600 hover:bg-violet-700 text-white shadow-sm" disabled={provider === "prompt-only"}>
-            Generate Questions
-          </Button>
-          {provider === "prompt-only" && <p className="text-xs text-red-500 mt-4">Please select an AI provider in the top header first.</p>}
+          
+          {questionsPrompt && provider === "prompt-only" ? (
+             <div className="space-y-4 text-left">
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <p className="text-xs font-semibold mb-2 text-violet-600 uppercase">Question Generation Prompt</p>
+                    <pre className="text-[10px] font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">{questionsPrompt}</pre>
+                    <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="mt-3 w-full border-violet-200 text-violet-700 hover:bg-violet-50"
+                        onClick={() => {
+                            navigator.clipboard.writeText(questionsPrompt);
+                            toast.success("Prompt copied!");
+                        }}
+                    >
+                        Copy Prompt & Open AI
+                    </Button>
+                </div>
+                <div className="space-y-2">
+                    <p className="text-xs font-medium">Step 2: Paste the AI response (JSON array) here</p>
+                    <textarea 
+                        className="w-full h-32 p-3 text-xs font-mono border rounded-lg dark:bg-slate-900"
+                        placeholder='[{"question": "...", "type": "...", "reasoning": "..."}]'
+                        onChange={(e) => {
+                            try {
+                                const parsed = JSON.parse(e.target.value);
+                                if (Array.isArray(parsed)) {
+                                    setQuestions(parsed);
+                                    setQuestionsPrompt("");
+                                    toast.success("Questions loaded!");
+                                }
+                            } catch {
+                                // wait for valid JSON
+                            }
+                        }}
+                    />
+                </div>
+             </div>
+          ) : (
+            <Button onClick={generateQuestions} className="bg-violet-600 hover:bg-violet-700 text-white shadow-sm">
+                Generate Questions
+            </Button>
+          )}
         </div>
       )}
 

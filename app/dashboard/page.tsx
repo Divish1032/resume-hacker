@@ -17,9 +17,13 @@ export default function DashboardPage() {
   const [resumes, setResumes] = useState<SavedResume[]>([]);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
+  const refreshStats = () => {
     setApps(getJobApplications());
     setResumes(getSavedResumes());
+  };
+
+  useEffect(() => {
+    refreshStats();
     setMounted(true);
   }, []);
 
@@ -102,7 +106,7 @@ export default function DashboardPage() {
         
         {/* Left Column - Applications Tracker */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          <ApplicationTracker isModal={false} />
+          <ApplicationTracker isModal={false} onUpdate={refreshStats} />
         </div>
         
         {/* Right Column - Highlights / Insights */}

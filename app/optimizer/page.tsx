@@ -112,10 +112,12 @@ export default function Home() {
 
   
 
+  const aiBody = useMemo(() => ({ provider, model: selectedModel, apiKey }), [provider, selectedModel, apiKey]);
+
   const { complete, completion, isLoading, setCompletion } = useCompletion({
     api: "/api/generate",
     streamProtocol: "text",
-    body: { provider, model: selectedModel, apiKey },
+    body: aiBody,
     onFinish: (_prompt, finalCompletion) => {
       const strategies = [
         () => { const m = finalCompletion.match(/```json\s*([\s\S]*?)\s*```/); return m ? m[1] : null; },
@@ -148,7 +150,7 @@ export default function Home() {
   } = useCompletion({
     api: "/api/generate",
     streamProtocol: "text",
-    body: { provider, model: selectedModel, apiKey },
+    body: aiBody,
     onFinish: (_prompt, finalText) => {
       setClFinalText(finalText.trim());
       toast.success("\u2709\ufe0f Cover letter ready!");
@@ -210,9 +212,9 @@ export default function Home() {
   };
 
   const handleJobDataChange = useCallback((data: JobDescriptionData) => {
-    store.setJobData(data);
-    store.setJobText(data.text || "");
-  }, [store]);
+    useAppStore.getState().setJobData(data);
+    useAppStore.getState().setJobText(data.text || "");
+  }, []);
 
   const handleGenerate = async () => {
     const validationError = validateBeforeGenerate();

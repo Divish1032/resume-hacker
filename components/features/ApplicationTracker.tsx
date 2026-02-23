@@ -6,16 +6,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Briefcase, Plus, Trash2, Calendar, Building, Link as LinkIcon, Edit2 } from "lucide-react";
+import { 
+  X, 
+  Briefcase, 
+  Plus, 
+  Trash2, 
+  Calendar, 
+  Building, 
+  Link as LinkIcon, 
+  Edit2, 
+  ExternalLink, 
+  Zap 
+} from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useAppStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 interface ApplicationTrackerProps {
   onClose?: () => void;
   isModal?: boolean;
+  onUpdate?: () => void;
 }
 
-export function ApplicationTracker({ onClose, isModal = true }: ApplicationTrackerProps) {
+export function ApplicationTracker({ onClose, isModal = true, onUpdate }: ApplicationTrackerProps) {
+  const router = useRouter();
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingApp, setEditingApp] = useState<Partial<JobApplication>>({});
@@ -66,6 +87,7 @@ export function ApplicationTracker({ onClose, isModal = true }: ApplicationTrack
     setIsEditing(false);
     refreshApps();
     toast.success("Application saved");
+    onUpdate?.();
   };
 
   const handleDelete = (id: string) => {
@@ -73,6 +95,7 @@ export function ApplicationTracker({ onClose, isModal = true }: ApplicationTrack
       deleteJobApplication(id);
       refreshApps();
       toast.success("Deleted application");
+      onUpdate?.();
     }
   };
 
@@ -190,13 +213,21 @@ export function ApplicationTracker({ onClose, isModal = true }: ApplicationTrack
               ) : (
                 <div className="grid gap-3">
                   {apps.map(app => (
-                    <div key={app.id} className="group flex flex-col sm:flex-row gap-3 sm:items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
-                      <div className="min-w-0 pr-4">
+                    <div key={app.id} 
+                      className="group flex flex-col sm:flex-row gap-3 sm:items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors"
+                    >
+                      <div className="min-w-0 pr-4 flex-1">
                         <h4 className="font-semibold text-slate-900 dark:text-white truncate flex items-center gap-2">
                           {app.title}
                           {app.url && (
-                            <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-500" onClick={e => e.stopPropagation()}>
-                              <LinkIcon className="w-3.5 h-3.5" />
+                            <a 
+                              href={/^https?:\/\//i.test(app.url) ? app.url : (app.url.includes('.') && !app.url.includes(' ') ? `https://${app.url}` : app.url)} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-slate-400 hover:text-indigo-500" 
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
                             </a>
                           )}
                         </h4>
@@ -212,12 +243,54 @@ export function ApplicationTracker({ onClose, isModal = true }: ApplicationTrack
                         </span>
                         
                         <div className="flex items-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity gap-1">
-                          <button onClick={() => editApp(app)} className="p-1.5 text-slate-400 hover:text-indigo-500 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => handleDelete(app.id)} className="p-1.5 text-slate-400 hover:text-red-500 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                                  onClick={() => {
+                                    useAppStore.getState().setJobText(app.title + (app.company ? ` at ${app.company}` : ""));
+                                    useAppStore.getState().setJobData({ text: app.notes || app.title });
+                                    router.push('/optimizer');
+                                    if (onClose) onClose();
+                                  }}
+                                >
+                                  <Zap className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Load into Optimizer</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-slate-400 hover:text-indigo-500"
+                                  onClick={() => editApp(app)}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-slate-400 hover:text-red-500"
+                                  onClick={() => handleDelete(app.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                     </div>

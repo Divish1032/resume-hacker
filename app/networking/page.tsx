@@ -23,10 +23,11 @@ interface NetworkingResponse {
 
 export default function NetworkingPage() {
   const store = useAppStore();
-  const { resumeData, jobData, provider, selectedModel: model, apiKey } = store;
+  const { resumeData, jobData, provider, selectedModel: model, apiKey, isHydrated } = store;
   
   const [response, setResponse] = useState<NetworkingResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [networkingPrompt, setNetworkingPrompt] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -39,16 +40,17 @@ export default function NetworkingPage() {
       toast.error("Please ensure you have loaded a resume in the Optimizer first.");
       return;
     }
+
+    const prompt = generateNetworkingPrompt(resumeData, jobData?.text ? jobData : undefined);
+
     if (provider === "prompt-only") {
-      toast.error("Please select an AI provider in the header to generate content.");
+      setNetworkingPrompt(prompt);
+      setResponse(null);
       return;
     }
 
     setIsGenerating(true);
     setResponse(null);
-
-    // Pass jobData only if it has meaningful text to tailor the outreach
-    const prompt = generateNetworkingPrompt(resumeData, jobData?.text ? jobData : undefined);
 
     try {
       const res = await fetch("/api/generate", {
@@ -99,7 +101,7 @@ export default function NetworkingPage() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  if (!mounted) return null;
+  if (!mounted || !isHydrated) return null;
 
   const isReady = !!resumeData;
 
@@ -118,43 +120,80 @@ export default function NetworkingPage() {
         
         <Button 
           onClick={generateNetworkingContent} 
-          disabled={!isReady || isGenerating || provider === "prompt-only"}
+          disabled={!isReady || isGenerating}
           className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm self-start md:self-auto"
         >
           {isGenerating ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Crafting Profile...</>
           ) : (
-            <><RefreshCw className="w-4 h-4 mr-2" /> {response ? "Regenerate Content" : "Generate Profile & Outreach"}</>
+            <><RefreshCw className="w-4 h-4 mr-2" /> {response || networkingPrompt ? "Regenerate Content" : "Generate Profile & Outreach"}</>
           )}
         </Button>
       </div>
 
-      {(!isReady || provider === "prompt-only") && !isGenerating && !response && (
+      {(!isReady) && !isGenerating && !response && (
         <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl p-6 text-center max-w-2xl mx-auto mt-12">
           <p className="text-amber-800 dark:text-amber-400 font-medium mb-4">
-            {!isReady ? "You need an active Resume to use the Networking tools." : "Select an AI provider to use this feature."}
+            You need an active Resume to use the Networking tools.
           </p>
           <p className="text-sm text-amber-700 dark:text-amber-500/70 mb-6">
-            {!isReady 
-              ? "Head over to the Optimizer and load your resume first. Adding a target Job Description will customize the outreach templates specifically for that role!" 
-              : "Please select OpenAI, Anthropic, Gemini, DeepSeek, or a local Ollama model in the top header."}
+            Head over to the Optimizer and load your resume first. Adding a target Job Description will customize the outreach templates specifically for that role!
           </p>
-          {!isReady && (
-            <Button variant="outline" className="bg-white dark:bg-slate-950 border-amber-200 dark:border-amber-800" onClick={() => window.location.href = '/optimizer'}>
-              Go to Optimizer
-            </Button>
-          )}
+          <Button variant="outline" className="bg-white dark:bg-slate-950 border-amber-200 dark:border-amber-800" onClick={() => window.location.href = '/optimizer'}>
+            Go to Optimizer
+          </Button>
         </div>
       )}
 
-      {isReady && provider !== "prompt-only" && !isGenerating && !response && (
+      {isReady && !isGenerating && !response && (
         <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center max-w-3xl mx-auto shadow-sm mt-12">
           <UserCircle className="w-16 h-16 text-slate-200 mx-auto mb-6" />
           <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Build Your Professional Brand</h3>
           <p className="text-slate-500 mb-8 max-w-lg mx-auto">We'll analyze your resume to generate high-converting LinkedIn headlines, an engaging &quot;About&quot; section, and personalized outreach templates.</p>
-          <Button onClick={generateNetworkingContent} size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-            Generate Networking Kit
-          </Button>
+          
+          {networkingPrompt && provider === "prompt-only" ? (
+             <div className="space-y-4 text-left">
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <p className="text-xs font-semibold mb-2 text-blue-600 uppercase">Networking Generation Prompt</p>
+                    <pre className="text-[10px] font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">{networkingPrompt}</pre>
+                    <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="mt-3 w-full border-blue-200 text-blue-700 hover:bg-blue-50"
+                        onClick={() => {
+                            navigator.clipboard.writeText(networkingPrompt);
+                            toast.success("Prompt copied!");
+                        }}
+                    >
+                        Copy Prompt & Open AI
+                    </Button>
+                </div>
+                <div className="space-y-2">
+                    <p className="text-xs font-medium">Step 2: Paste the AI response (JSON) here</p>
+                    <textarea 
+                        className="w-full h-32 p-3 text-xs font-mono border rounded-lg dark:bg-slate-900"
+                        placeholder='{"headlines": ["..."], "about": "...", "outreach": [...] }'
+                        onChange={(e) => {
+                            try {
+                                const parsed = JSON.parse(e.target.value);
+                                if (parsed.headlines) {
+                                    setResponse(parsed);
+                                    setNetworkingPrompt("");
+                                    toast.success("Content loaded!");
+                                }
+                            } catch {
+                                // wait for valid JSON
+                            }
+                        }}
+                    />
+                </div>
+             </div>
+          ) : (
+            <Button onClick={generateNetworkingContent} size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                Generate Networking Kit
+            </Button>
+          )}
+
           {jobData?.text && (
              <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-4 flex items-center justify-center gap-1.5">
                <Briefcase className="w-3.5 h-3.5" /> Will be tailored for: Your targeted job description

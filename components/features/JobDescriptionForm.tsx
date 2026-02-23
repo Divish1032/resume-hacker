@@ -35,6 +35,13 @@ export function JobDescriptionForm({ onDataChange, defaultValues }: JobDescripti
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(values), onDataChange]);
 
+  // Update form when defaultValues (from store) change
+  useEffect(() => {
+    if (defaultValues?.text && defaultValues.text !== form.getValues("text")) {
+      form.reset(defaultValues as JobDescriptionData);
+    }
+  }, [JSON.stringify(defaultValues), form]);
+
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
