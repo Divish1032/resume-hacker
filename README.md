@@ -1,5 +1,10 @@
 # ✨ Resume Hacker: Free Open-Source AI Resume Optimizer & ATS Scorer
 
+[![Latest Release](https://img.shields.io/github/v/release/Divish1032/resume-hacker?color=059669&label=Latest%20Release&style=flat-square)](https://github.com/Divish1032/resume-hacker/releases)
+[![License: MIT](https://img.shields.io/github/license/Divish1032/resume-hacker?color=334155&style=flat-square)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed-Vercel-black?style=flat-square&logo=vercel)](https://resume-hacker-nine.vercel.app)
+
 **Resume Hacker** is a free, privacy-first, open-source AI resume builder and ATS checker. It uses advanced locally-hosted AI (Ollama) or secure cloud endpoints (OpenAI, Claude, DeepSeek) to tailor your resume to any specific job description. Maximize your Application Tracking System (ATS) match score and easily bypass HR screeners.
 
 ![Resume Hacker UI preview showing AI ATS scoring](public/screenshot.png)
