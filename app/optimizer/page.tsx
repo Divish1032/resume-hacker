@@ -276,7 +276,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans transition-colors duration-200">
             {/* ── Page Header ── */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 pb-2 flex items-center justify-between">
+      <div className="w-full mx-auto px-4 sm:px-6 py-4 pb-2 flex items-center justify-between">
         <div>
            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Resume Optimizer</h1>
            <p className="text-sm text-slate-500">Tailor your resume for the ATS in seconds.</p>

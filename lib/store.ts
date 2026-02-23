@@ -40,7 +40,13 @@ export interface AppState {
   setJobData: (data: JobDescriptionData | null) => void;
   setJobText: (text: string) => void;
 
-  loadResume: (data: ResumeData | null, id: string | null) => void;
+  loadResume: (
+    data: ResumeData | null, 
+    id: string | null, 
+    originalData?: ResumeData | null, 
+    jobData?: any | null, 
+    jobText?: string
+  ) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -78,10 +84,12 @@ export const useAppStore = create<AppState>()(
       isHydrated: false,
       setHydrated: (isHydrated) => set({ isHydrated }),
 
-      loadResume: (data, id) => set({
+      loadResume: (data, id, originalData, jobData, jobText) => set({
         resumeData: data,
-        originalResumeData: data,
+        originalResumeData: originalData || data,
         activeResumeId: id,
+        jobData: jobData || null,
+        jobText: jobText || "",
       }),
     }),
     {

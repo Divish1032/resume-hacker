@@ -14,15 +14,25 @@ import { FileText, Save, Plus, Trash2, ChevronDown } from "lucide-react";
 import { getSavedResumes, saveResume, deleteResume, SavedResume } from "@/lib/storage";
 import { ResumeData } from "@/lib/schema";
 import { toast } from "sonner";
+import { useAppStore } from "@/lib/store";
 
 interface ResumeSelectorProps {
   currentData: ResumeData | null;
-  onLoad: (data: ResumeData | null, id: string | null) => void;
+  onLoad: (
+    data: ResumeData | null, 
+    id: string | null,
+    originalData?: ResumeData | null,
+    jobData?: any | null,
+    jobText?: string
+  ) => void;
 }
 
 export function ResumeSelector({ currentData, onLoad }: ResumeSelectorProps) {
   const [resumes, setResumes] = useState<SavedResume[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  
+  // Expose the store to get the full session context when saving
+  const { originalResumeData, jobData, jobText } = useAppStore();
 
   useEffect(() => {
     refreshResumes();
@@ -47,6 +57,9 @@ export function ResumeSelector({ currentData, onLoad }: ResumeSelectorProps) {
       name: activeId ? (resumes.find(r => r.id === activeId)?.name || name) : name,
       updatedAt: Date.now(),
       data: currentData,
+      originalData: originalResumeData,
+      jobData: jobData,
+      jobText: jobText,
     });
 
     setActiveId(id);
@@ -62,7 +75,7 @@ export function ResumeSelector({ currentData, onLoad }: ResumeSelectorProps) {
 
   const handleSelect = (r: SavedResume) => {
     setActiveId(r.id);
-    onLoad(r.data, r.id);
+    onLoad(r.data, r.id, r.originalData, r.jobData, r.jobText);
     toast.success(`Loaded ${r.name}`);
   };
 
