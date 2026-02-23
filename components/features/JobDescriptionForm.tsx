@@ -67,7 +67,7 @@ export function JobDescriptionForm({ onDataChange, defaultValues }: JobDescripti
                 variant="outline"
                 size="sm"
                 onClick={handlePaste}
-                className="h-7 px-3 text-xs font-medium border-dashed border-slate-300 text-slate-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                className="h-7 px-3 text-xs font-medium border-dashed border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-colors"
               >
                 <ClipboardPaste className="w-3.5 h-3.5 mr-1.5" />
                 Paste JD
@@ -109,7 +109,7 @@ export function JobDescriptionForm({ onDataChange, defaultValues }: JobDescripti
               registerRef(el);
               textareaRef.current = el;
             }}
-            className="flex-1 min-h-[320px] border-slate-200 bg-white focus:ring-indigo-500/20 focus:border-indigo-400 transition-all font-mono text-sm leading-relaxed resize-none"
+            className="flex-1 min-h-[320px] border-slate-200 dark:border-slate-800 bg-background focus:ring-indigo-500/20 focus:border-indigo-400 dark:focus:border-indigo-500 transition-all font-mono text-sm leading-relaxed resize-none"
             placeholder="Paste the full job description here... or tap the Paste button above ↑"
           />
           {errors.text && <p className="text-red-500 text-xs mt-1">{errors.text.message}</p>}

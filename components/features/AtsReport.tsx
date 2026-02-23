@@ -25,9 +25,9 @@ export function AtsReport({ score }: AtsReportProps) {
   };
 
   const MetricRow = ({ label, current, max, icon: Icon }: { label: string, current: number, max: number, icon: React.ElementType }) => (
-    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-white rounded-md shadow-sm">
+        <div className="p-2 bg-white dark:bg-slate-800 rounded-md shadow-sm">
           <Icon className="w-4 h-4 text-slate-500" />
         </div>
         <span className="text-sm font-medium text-slate-700">{label}</span>
@@ -40,9 +40,9 @@ export function AtsReport({ score }: AtsReportProps) {
   );
 
   return (
-    <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-5 md:p-6 space-y-6">
+    <div className="bg-background border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl p-5 md:p-6 space-y-6">
       {/* Overview Section */}
-      <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-xl border border-slate-100">
+      <div className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
         <div className="relative flex items-center justify-center w-32 h-32 mb-4">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
             <circle
@@ -104,9 +104,9 @@ export function AtsReport({ score }: AtsReportProps) {
           <div className="space-y-3">
             {score.suggestions.map((suggestion, idx) => (
               <div key={idx} className={`p-4 rounded-xl border text-sm flex items-start gap-4 ${
-                suggestion.priority === 'high' ? 'bg-red-50/50 border-red-100 text-red-900' :
-                suggestion.priority === 'medium' ? 'bg-amber-50/50 border-amber-100 text-amber-900' :
-                'bg-blue-50/50 border-blue-100 text-blue-900'
+                suggestion.priority === 'high' ? 'bg-red-50/50 dark:bg-red-900/20 border-red-100 dark:border-red-900 text-red-900 dark:text-red-400' :
+                suggestion.priority === 'medium' ? 'bg-amber-50/50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900 text-amber-900 dark:text-amber-400' :
+                'bg-blue-50/50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900 text-blue-900 dark:text-blue-400'
               }`}>
                 <div className="mt-0.5">
                   {suggestion.priority === 'high' ? <XCircle className="w-4 h-4 text-red-500" /> :
@@ -115,7 +115,7 @@ export function AtsReport({ score }: AtsReportProps) {
                 </div>
                 <div>
                   <p className="font-semibold mb-1">{suggestion.text}</p>
-                  <div className="flex items-start gap-2 text-xs opacity-80 mt-2 bg-white/50 p-2 rounded-md">
+                  <div className="flex items-start gap-2 text-xs opacity-80 mt-2 bg-white/50 dark:bg-slate-950/50 p-2 rounded-md">
                     <ArrowRight className="w-3 h-3 mt-0.5 shrink-0" />
                     <p>{suggestion.howToFix}</p>
                   </div>
@@ -140,12 +140,12 @@ export function AtsReport({ score }: AtsReportProps) {
                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-2">Hard Skills</p>
                  <div className="flex flex-wrap gap-2">
                    {score.breakdown.hardSkills.missing.slice(0, 10).map((missing, i) => (
-                     <span key={`hard-${i}`} className="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-md text-xs border border-rose-100 font-medium shadow-sm">
+                     <span key={`hard-${i}`} className="px-2.5 py-1 bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 rounded-md text-xs border border-rose-100 dark:border-rose-900 font-medium shadow-sm">
                        {missing}
                      </span>
                    ))}
                    {score.breakdown.hardSkills.missing.length > 10 && (
-                     <span className="px-2.5 py-1 bg-slate-50 text-slate-500 rounded-md text-xs border border-slate-200">
+                     <span className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md text-xs border border-slate-200 dark:border-slate-700">
                        +{score.breakdown.hardSkills.missing.length - 10} more
                      </span>
                    )}
@@ -158,12 +158,12 @@ export function AtsReport({ score }: AtsReportProps) {
                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-2">Soft Skills</p>
                  <div className="flex flex-wrap gap-2">
                    {score.breakdown.softSkills.missing.slice(0, 10).map((missing, i) => (
-                     <span key={`soft-${i}`} className="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-md text-xs border border-amber-100 font-medium shadow-sm">
+                     <span key={`soft-${i}`} className="px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-md text-xs border border-amber-100 dark:border-amber-900 font-medium shadow-sm">
                        {missing}
                      </span>
                    ))}
                    {score.breakdown.softSkills.missing.length > 10 && (
-                     <span className="px-2.5 py-1 bg-slate-50 text-slate-500 rounded-md text-xs border border-slate-200">
+                     <span className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md text-xs border border-slate-200 dark:border-slate-700">
                        +{score.breakdown.softSkills.missing.length - 10} more
                      </span>
                    )}

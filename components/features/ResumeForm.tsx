@@ -295,34 +295,34 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 col-span-2">
               <Label className="text-xs font-medium text-muted-foreground">Full Name</Label>
-              <Input {...register("personalInfo.fullName")} placeholder="John Doe" className="bg-white dark:bg-slate-950/50" />
+              <Input {...register("personalInfo.fullName")} placeholder="John Doe" className="bg-background" />
               {errors.personalInfo?.fullName && <p className="text-red-500 text-xs">{errors.personalInfo.fullName.message}</p>}
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Email</Label>
-              <Input {...register("personalInfo.email")} placeholder="john@example.com" className="bg-white dark:bg-slate-950/50" />
+              <Input {...register("personalInfo.email")} placeholder="john@example.com" className="bg-background" />
                {errors.personalInfo?.email && <p className="text-red-500 text-xs">{errors.personalInfo.email.message}</p>}
             </div>
              <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Phone</Label>
-              <Input {...register("personalInfo.phone")} placeholder="+1 234 567 890" className="bg-white dark:bg-slate-950/50" />
+              <Input {...register("personalInfo.phone")} placeholder="+1 234 567 890" className="bg-background" />
             </div>
              <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">LinkedIn</Label>
-              <Input {...register("personalInfo.linkedin")} placeholder="linkedin.com/in/johndoe" className="bg-white dark:bg-slate-950/50" />
+              <Input {...register("personalInfo.linkedin")} placeholder="linkedin.com/in/johndoe" className="bg-background" />
             </div>
              <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Website</Label>
-              <Input {...register("personalInfo.website")} placeholder="johndoe.com" className="bg-white dark:bg-slate-950/50" />
+              <Input {...register("personalInfo.website")} placeholder="johndoe.com" className="bg-background" />
             </div>
              <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Location</Label>
-              <Input {...register("personalInfo.location")} placeholder="New York, NY" className="bg-white dark:bg-slate-950/50" />
+              <Input {...register("personalInfo.location")} placeholder="New York, NY" className="bg-background" />
             </div>
           </div>
           <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Professional Summary</Label>
-              <Textarea {...register("summary")} placeholder="Experienced software engineer..." className="bg-white dark:bg-slate-950/50 min-h-[100px]" />
+              <Textarea {...register("summary")} placeholder="Experienced software engineer..." className="bg-background min-h-[100px]" />
           </div>
         </CardContent>
       </Card>
@@ -331,13 +331,13 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
       <div className="space-y-3">
         <div className="flex items-center justify-between">
             <Label className="text-sm font-semibold">Work Experience</Label>
-                <Button variant="ghost" size="sm" onClick={() => appendWork({ id: crypto.randomUUID(), jobTitle: "", company: "", startDate: "", description: "", current: false })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400">
+                <Button variant="ghost" size="sm" onClick={() => appendWork({ id: crypto.randomUUID(), jobTitle: "", company: "", startDate: "", description: "", current: false })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
                 <Plus className="w-3 h-3 mr-1" /> Add
             </Button>
         </div>
         <div className="space-y-4">
           {workFields.map((field, index) => (
-             <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800 rounded-lg p-4 space-y-3 hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors shadow-sm">
+             <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 dark:border-slate-800 rounded-lg p-4 space-y-3 hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors shadow-sm">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeWork(index)}>
@@ -348,23 +348,23 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
                 </Tooltip>
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                        <Input {...register(`workExperience.${index}.jobTitle`)} placeholder="Job Title" className={`bg-white dark:bg-slate-950/50 ${errors.workExperience?.[index]?.jobTitle ? 'border-red-400 focus:border-red-400' : ''}`} />
+                        <Input {...register(`workExperience.${index}.jobTitle`)} placeholder="Job Title" className={`bg-background ${errors.workExperience?.[index]?.jobTitle ? 'border-red-400 focus:border-red-400' : ''}`} />
                         {errors.workExperience?.[index]?.jobTitle && <p className="text-red-500 text-[10px] mt-0.5">{errors.workExperience[index]!.jobTitle!.message}</p>}
                     </div>
                      <div className="space-y-1">
-                        <Input {...register(`workExperience.${index}.company`)} placeholder="Company" className={`bg-white dark:bg-slate-950/50 ${errors.workExperience?.[index]?.company ? 'border-red-400 focus:border-red-400' : ''}`} />
+                        <Input {...register(`workExperience.${index}.company`)} placeholder="Company" className={`bg-background ${errors.workExperience?.[index]?.company ? 'border-red-400 focus:border-red-400' : ''}`} />
                         {errors.workExperience?.[index]?.company && <p className="text-red-500 text-[10px] mt-0.5">{errors.workExperience[index]!.company!.message}</p>}
                     </div>
                      <div className="space-y-1">
-                        <Input {...register(`workExperience.${index}.startDate`)} placeholder="Start Date" className={`bg-white dark:bg-slate-950/50 text-xs text-muted-foreground ${errors.workExperience?.[index]?.startDate ? 'border-red-400' : ''}`} />
+                        <Input {...register(`workExperience.${index}.startDate`)} placeholder="Start Date" className={`bg-background text-xs text-muted-foreground ${errors.workExperience?.[index]?.startDate ? 'border-red-400' : ''}`} />
                         {errors.workExperience?.[index]?.startDate && <p className="text-red-500 text-[10px] mt-0.5">{errors.workExperience[index]!.startDate!.message}</p>}
                     </div>
                      <div className="space-y-1">
-                        <Input {...register(`workExperience.${index}.endDate`)} placeholder="End Date" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" />
+                        <Input {...register(`workExperience.${index}.endDate`)} placeholder="End Date" className="bg-background text-xs text-muted-foreground" />
                     </div>
                 </div>
                  <div className="space-y-1">
-                    <Textarea className={`min-h-[80px] bg-white dark:bg-slate-950/50 ${errors.workExperience?.[index]?.description ? 'border-red-400' : ''}`} {...register(`workExperience.${index}.description`)} placeholder="Responsibilities..." />
+                    <Textarea className={`min-h-[80px] bg-background ${errors.workExperience?.[index]?.description ? 'border-red-400' : ''}`} {...register(`workExperience.${index}.description`)} placeholder="Responsibilities..." />
                     {errors.workExperience?.[index]?.description && <p className="text-red-500 text-[10px] mt-0.5">{errors.workExperience[index]!.description!.message}</p>}
                 </div>
              </div>
@@ -377,13 +377,13 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
       <div className="space-y-3">
         <div className="flex items-center justify-between">
             <Label className="text-sm font-semibold">Education</Label>
-            <Button variant="ghost" size="sm" onClick={() => appendEdu({ id: crypto.randomUUID(), degree: "", school: "", startDate: "", current: false })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400">
+            <Button variant="ghost" size="sm" onClick={() => appendEdu({ id: crypto.randomUUID(), degree: "", school: "", startDate: "", current: false })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
             <Plus className="w-3 h-3 mr-1" /> Add
           </Button>
         </div>
         <div className="space-y-4">
           {eduFields.map((field, index) => (
-            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800 rounded-lg p-4 space-y-3 hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors shadow-sm">
+            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 dark:border-slate-800 rounded-lg p-4 space-y-3 hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors shadow-sm">
                  <Tooltip>
                    <TooltipTrigger asChild>
                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeEdu(index)}>
@@ -394,19 +394,19 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
                  </Tooltip>
                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                         <Input {...register(`education.${index}.degree`)} placeholder="Degree" className={`bg-white dark:bg-slate-950/50 ${errors.education?.[index]?.degree ? 'border-red-400 focus:border-red-400' : ''}`} />
+                         <Input {...register(`education.${index}.degree`)} placeholder="Degree" className={`bg-background ${errors.education?.[index]?.degree ? 'border-red-400 focus:border-red-400' : ''}`} />
                          {errors.education?.[index]?.degree && <p className="text-red-500 text-[10px] mt-0.5">{errors.education[index]!.degree!.message}</p>}
                     </div>
                      <div className="space-y-1">
-                          <Input {...register(`education.${index}.school`)} placeholder="School" className={`bg-white dark:bg-slate-950/50 ${errors.education?.[index]?.school ? 'border-red-400 focus:border-red-400' : ''}`} />
+                          <Input {...register(`education.${index}.school`)} placeholder="School" className={`bg-background ${errors.education?.[index]?.school ? 'border-red-400 focus:border-red-400' : ''}`} />
                           {errors.education?.[index]?.school && <p className="text-red-500 text-[10px] mt-0.5">{errors.education[index]!.school!.message}</p>}
                     </div>
                      <div className="space-y-1">
-                          <Input {...register(`education.${index}.startDate`)} placeholder="Start Year" className={`bg-white dark:bg-slate-950/50 text-xs text-muted-foreground ${errors.education?.[index]?.startDate ? 'border-red-400' : ''}`} />
+                          <Input {...register(`education.${index}.startDate`)} placeholder="Start Year" className={`bg-background text-xs text-muted-foreground ${errors.education?.[index]?.startDate ? 'border-red-400' : ''}`} />
                           {errors.education?.[index]?.startDate && <p className="text-red-500 text-[10px] mt-0.5">{errors.education[index]!.startDate!.message}</p>}
                     </div>
                      <div className="space-y-1">
-                          <Input {...register(`education.${index}.endDate`)} placeholder="End Year" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" />
+                          <Input {...register(`education.${index}.endDate`)} placeholder="End Year" className="bg-background text-xs text-muted-foreground" />
                     </div>
                  </div>
             </div>
@@ -418,13 +418,13 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
       <div className="space-y-3">
         <div className="flex items-center justify-between">
             <Label className="text-sm font-semibold">Projects</Label>
-            <Button variant="ghost" size="sm" onClick={() => appendProj({ id: crypto.randomUUID(), name: "", description: "", link: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400">
+            <Button variant="ghost" size="sm" onClick={() => appendProj({ id: crypto.randomUUID(), name: "", description: "", link: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
             <Plus className="w-3 h-3 mr-1" /> Add
           </Button>
         </div>
         <div className="space-y-4">
           {projFields.map((field, index) => (
-            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800 rounded-lg p-4 space-y-3 hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors shadow-sm">
+            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 dark:border-slate-800 rounded-lg p-4 space-y-3 hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors shadow-sm">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeProj(index)}>
@@ -435,16 +435,16 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
                 </Tooltip>
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                        <Input {...register(`projects.${index}.name`)} placeholder="Project Name" className={`bg-white dark:bg-slate-950/50 ${errors.projects?.[index]?.name ? 'border-red-400 focus:border-red-400' : ''}`} />
+                        <Input {...register(`projects.${index}.name`)} placeholder="Project Name" className={`bg-background ${errors.projects?.[index]?.name ? 'border-red-400 focus:border-red-400' : ''}`} />
                         {errors.projects?.[index]?.name && <p className="text-red-500 text-[10px] mt-0.5">{errors.projects[index]!.name!.message}</p>}
                     </div>
                      <div className="space-y-1">
-                        <Input {...register(`projects.${index}.link`)} placeholder="Link (github...)" className={`bg-white dark:bg-slate-950/50 text-xs text-muted-foreground ${errors.projects?.[index]?.link ? 'border-red-400' : ''}`} />
+                        <Input {...register(`projects.${index}.link`)} placeholder="Link (github...)" className={`bg-background text-xs text-muted-foreground ${errors.projects?.[index]?.link ? 'border-red-400' : ''}`} />
                         {errors.projects?.[index]?.link && <p className="text-red-500 text-[10px] mt-0.5">{errors.projects[index]!.link!.message}</p>}
                     </div>
                 </div>
                  <div className="space-y-1">
-                    <Textarea className={`min-h-[60px] bg-white dark:bg-slate-950/50 ${errors.projects?.[index]?.description ? 'border-red-400' : ''}`} {...register(`projects.${index}.description`)} placeholder="Description..." />
+                    <Textarea className={`min-h-[60px] bg-background ${errors.projects?.[index]?.description ? 'border-red-400' : ''}`} {...register(`projects.${index}.description`)} placeholder="Description..." />
                     {errors.projects?.[index]?.description && <p className="text-red-500 text-[10px] mt-0.5">{errors.projects[index]!.description!.message}</p>}
                 </div>
             </div>
@@ -454,7 +454,7 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
 
       <div className="space-y-2">
         <Label className="text-sm font-semibold">Skills</Label>
-        <Textarea {...register("skills")} placeholder="React, Node.js, TypeScript, Python..." className="bg-white dark:bg-slate-950/50" />
+        <Textarea {...register("skills")} placeholder="React, Node.js, TypeScript, Python..." className="bg-background" />
         <p className="text-[10px] text-muted-foreground">Comma separated.</p>
       </div>
 
@@ -462,21 +462,21 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-semibold flex items-center gap-1.5"><BadgeCheck className="w-3.5 h-3.5 text-indigo-500" />Certifications</Label>
-          <Button variant="ghost" size="sm" onClick={() => appendCert({ id: crypto.randomUUID(), name: "", issuer: "", year: "", expiry: "", url: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+          <Button variant="ghost" size="sm" onClick={() => appendCert({ id: crypto.randomUUID(), name: "", issuer: "", year: "", expiry: "", url: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
             <Plus className="w-3 h-3 mr-1" /> Add
           </Button>
         </div>
         <div className="space-y-3">
           {certFields.map((field, index) => (
-            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-100 rounded-lg p-4 space-y-2 hover:border-indigo-200 transition-colors shadow-sm">
+            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-2 hover:border-indigo-200 transition-colors shadow-sm">
               <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeCert(index)}>
                 <Trash2 className="w-3 h-3" />
               </Button>
               <div className="grid grid-cols-2 gap-3">
-                <div><Input {...register(`certifications.${index}.name`)} placeholder="e.g. AWS Solutions Architect" className="bg-white dark:bg-slate-950/50" /></div>
-                <div><Input {...register(`certifications.${index}.issuer`)} placeholder="Issuer (e.g. Amazon)" className="bg-white dark:bg-slate-950/50" /></div>
-                <div><Input {...register(`certifications.${index}.year`)} placeholder="Year obtained" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" /></div>
-                <div><Input {...register(`certifications.${index}.expiry`)} placeholder="Expiry / No expiry" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" /></div>
+                <div><Input {...register(`certifications.${index}.name`)} placeholder="e.g. AWS Solutions Architect" className="bg-background" /></div>
+                <div><Input {...register(`certifications.${index}.issuer`)} placeholder="Issuer (e.g. Amazon)" className="bg-background" /></div>
+                <div><Input {...register(`certifications.${index}.year`)} placeholder="Year obtained" className="bg-background text-xs text-muted-foreground" /></div>
+                <div><Input {...register(`certifications.${index}.expiry`)} placeholder="Expiry / No expiry" className="bg-background text-xs text-muted-foreground" /></div>
               </div>
             </div>
           ))}
@@ -488,18 +488,18 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-semibold flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-emerald-500" />Languages</Label>
-          <Button variant="ghost" size="sm" onClick={() => appendLang({ id: crypto.randomUUID(), language: "", proficiency: "fluent" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+          <Button variant="ghost" size="sm" onClick={() => appendLang({ id: crypto.randomUUID(), language: "", proficiency: "fluent" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
             <Plus className="w-3 h-3 mr-1" /> Add
           </Button>
         </div>
         <div className="space-y-2">
           {langFields.map((field, index) => (
-            <div key={field.id} className="group relative flex items-center gap-3 bg-white dark:bg-slate-950/30 border border-slate-100 rounded-lg p-3 hover:border-emerald-200 transition-colors shadow-sm">
+            <div key={field.id} className="group relative flex items-center gap-3 bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 rounded-lg p-3 hover:border-emerald-200 transition-colors shadow-sm">
               <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeLang(index)}>
                 <Trash2 className="w-3 h-3" />
               </Button>
-              <div className="flex-1"><Input {...register(`languages.${index}.language`)} placeholder="Language (e.g. Spanish)" className="bg-white dark:bg-slate-950/50" /></div>
-              <select {...register(`languages.${index}.proficiency`)} className="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-400 shrink-0">
+              <div className="flex-1"><Input {...register(`languages.${index}.language`)} placeholder="Language (e.g. Spanish)" className="bg-background" /></div>
+              <select {...register(`languages.${index}.proficiency`)} className="text-xs border border-slate-200 rounded-md px-2 py-1 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-400 shrink-0">
                 <option value="native">Native</option>
                 <option value="fluent">Fluent</option>
                 <option value="intermediate">Intermediate</option>
@@ -515,22 +515,22 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-semibold flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-amber-500" />Awards &amp; Honors</Label>
-          <Button variant="ghost" size="sm" onClick={() => appendAward({ id: crypto.randomUUID(), title: "", issuer: "", year: "", description: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+          <Button variant="ghost" size="sm" onClick={() => appendAward({ id: crypto.randomUUID(), title: "", issuer: "", year: "", description: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
             <Plus className="w-3 h-3 mr-1" /> Add
           </Button>
         </div>
         <div className="space-y-3">
           {awardFields.map((field, index) => (
-            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-100 rounded-lg p-4 space-y-2 hover:border-amber-200 transition-colors shadow-sm">
+            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-2 hover:border-amber-200 transition-colors shadow-sm">
               <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAward(index)}>
                 <Trash2 className="w-3 h-3" />
               </Button>
               <div className="grid grid-cols-2 gap-3">
-                <div><Input {...register(`awards.${index}.title`)} placeholder="Award title" className="bg-white dark:bg-slate-950/50" /></div>
-                <div><Input {...register(`awards.${index}.issuer`)} placeholder="Issuing organization" className="bg-white dark:bg-slate-950/50" /></div>
-                <div className="col-span-2"><Input {...register(`awards.${index}.year`)} placeholder="Year" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" /></div>
+                <div><Input {...register(`awards.${index}.title`)} placeholder="Award title" className="bg-background" /></div>
+                <div><Input {...register(`awards.${index}.issuer`)} placeholder="Issuing organization" className="bg-background" /></div>
+                <div className="col-span-2"><Input {...register(`awards.${index}.year`)} placeholder="Year" className="bg-background text-xs text-muted-foreground" /></div>
               </div>
-              <Textarea className="min-h-[48px] bg-white dark:bg-slate-950/50" {...register(`awards.${index}.description`)} placeholder="Brief description (optional)" />
+              <Textarea className="min-h-[48px] bg-background" {...register(`awards.${index}.description`)} placeholder="Brief description (optional)" />
             </div>
           ))}
           {awardFields.length === 0 && <p className="text-xs text-muted-foreground text-center py-3 border border-dashed rounded-lg">No awards added.</p>}
@@ -541,23 +541,23 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-semibold flex items-center gap-1.5"><Heart className="w-3.5 h-3.5 text-rose-500" />Volunteer Work</Label>
-          <Button variant="ghost" size="sm" onClick={() => appendVol({ id: crypto.randomUUID(), organization: "", role: "", startDate: "", endDate: "", description: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+          <Button variant="ghost" size="sm" onClick={() => appendVol({ id: crypto.randomUUID(), organization: "", role: "", startDate: "", endDate: "", description: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
             <Plus className="w-3 h-3 mr-1" /> Add
           </Button>
         </div>
         <div className="space-y-3">
           {volFields.map((field, index) => (
-            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-100 rounded-lg p-4 space-y-2 hover:border-rose-200 transition-colors shadow-sm">
+            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-2 hover:border-rose-200 transition-colors shadow-sm">
               <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeVol(index)}>
                 <Trash2 className="w-3 h-3" />
               </Button>
               <div className="grid grid-cols-2 gap-3">
-                <div><Input {...register(`volunteerWork.${index}.organization`)} placeholder="Organization" className="bg-white dark:bg-slate-950/50" /></div>
-                <div><Input {...register(`volunteerWork.${index}.role`)} placeholder="Role (e.g. Mentor)" className="bg-white dark:bg-slate-950/50" /></div>
-                <div><Input {...register(`volunteerWork.${index}.startDate`)} placeholder="Start date" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" /></div>
-                <div><Input {...register(`volunteerWork.${index}.endDate`)} placeholder="End date" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" /></div>
+                <div><Input {...register(`volunteerWork.${index}.organization`)} placeholder="Organization" className="bg-background" /></div>
+                <div><Input {...register(`volunteerWork.${index}.role`)} placeholder="Role (e.g. Mentor)" className="bg-background" /></div>
+                <div><Input {...register(`volunteerWork.${index}.startDate`)} placeholder="Start date" className="bg-background text-xs text-muted-foreground" /></div>
+                <div><Input {...register(`volunteerWork.${index}.endDate`)} placeholder="End date" className="bg-background text-xs text-muted-foreground" /></div>
               </div>
-              <Textarea className="min-h-[48px] bg-white dark:bg-slate-950/50" {...register(`volunteerWork.${index}.description`)} placeholder="Brief description (optional)" />
+              <Textarea className="min-h-[48px] bg-background" {...register(`volunteerWork.${index}.description`)} placeholder="Brief description (optional)" />
             </div>
           ))}
           {volFields.length === 0 && <p className="text-xs text-muted-foreground text-center py-3 border border-dashed rounded-lg">No volunteer work added.</p>}
@@ -568,21 +568,21 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-semibold flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5 text-violet-500" />Publications &amp; Research</Label>
-          <Button variant="ghost" size="sm" onClick={() => appendPub({ id: crypto.randomUUID(), title: "", publisher: "", year: "", url: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+          <Button variant="ghost" size="sm" onClick={() => appendPub({ id: crypto.randomUUID(), title: "", publisher: "", year: "", url: "" })} className="h-6 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
             <Plus className="w-3 h-3 mr-1" /> Add
           </Button>
         </div>
         <div className="space-y-3">
           {pubFields.map((field, index) => (
-            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-100 rounded-lg p-4 space-y-2 hover:border-violet-200 transition-colors shadow-sm">
+            <div key={field.id} className="group relative bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-2 hover:border-violet-200 transition-colors shadow-sm">
               <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removePub(index)}>
                 <Trash2 className="w-3 h-3" />
               </Button>
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2"><Input {...register(`publications.${index}.title`)} placeholder="Title of paper / article / book" className="bg-white dark:bg-slate-950/50" /></div>
-                <div><Input {...register(`publications.${index}.publisher`)} placeholder="Journal / Conference / Platform" className="bg-white dark:bg-slate-950/50" /></div>
-                <div><Input {...register(`publications.${index}.year`)} placeholder="Year" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" /></div>
-                <div className="col-span-2"><Input {...register(`publications.${index}.url`)} placeholder="URL (optional)" className="bg-white dark:bg-slate-950/50 text-xs text-muted-foreground" /></div>
+                <div className="col-span-2"><Input {...register(`publications.${index}.title`)} placeholder="Title of paper / article / book" className="bg-background" /></div>
+                <div><Input {...register(`publications.${index}.publisher`)} placeholder="Journal / Conference / Platform" className="bg-background" /></div>
+                <div><Input {...register(`publications.${index}.year`)} placeholder="Year" className="bg-background text-xs text-muted-foreground" /></div>
+                <div className="col-span-2"><Input {...register(`publications.${index}.url`)} placeholder="URL (optional)" className="bg-background text-xs text-muted-foreground" /></div>
               </div>
             </div>
           ))}
@@ -698,7 +698,7 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
                           </div>
                         </div>
 
-                        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 space-y-2">
+                        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800 dark:border-slate-800 space-y-2">
                           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground italic">AI Tool Suggestions</p>
                           <div className="flex flex-wrap gap-2">
                             <a href="https://gemini.google.com" target="_blank" rel="noreferrer" className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded hover:underline">Gemini</a>

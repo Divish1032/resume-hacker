@@ -2,22 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { getJobApplications, saveJobApplication, deleteJobApplication, JobApplication, ApplicationStatus } from "@/lib/storage";
-import { JobDescriptionData, ResumeData } from "@/lib/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Briefcase, Plus, Trash2, Calendar, Building, MapPin, Link as LinkIcon, Edit2 } from "lucide-react";
+import { X, Briefcase, Plus, Trash2, Calendar, Building, Link as LinkIcon, Edit2 } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface ApplicationTrackerProps {
-  onClose: () => void;
-  currentResume?: ResumeData | null;
-  currentJob?: JobDescriptionData | null;
+  onClose?: () => void;
+  isModal?: boolean;
 }
 
-export function ApplicationTracker({ onClose, currentResume, currentJob }: ApplicationTrackerProps) {
+export function ApplicationTracker({ onClose, isModal = true }: ApplicationTrackerProps) {
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingApp, setEditingApp] = useState<Partial<JobApplication>>({});
@@ -89,15 +87,8 @@ export function ApplicationTracker({ onClose, currentResume, currentJob }: Appli
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 sm:p-6" onClick={onClose}>
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="w-full max-w-4xl bg-white dark:bg-slate-950 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={e => e.stopPropagation()}
-      >
+  const trackerContent = (
+    <div className={`w-full ${isModal ? "max-w-4xl max-h-[90vh]" : "h-full min-h-[500px]"} bg-white dark:bg-slate-950 rounded-2xl ${isModal ? "shadow-2xl" : "shadow-sm border border-slate-200 dark:border-slate-800"} overflow-hidden flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0">
           <div className="flex items-center gap-3">
@@ -109,9 +100,11 @@ export function ApplicationTracker({ onClose, currentResume, currentJob }: Appli
               <p className="text-xs text-slate-500">Track your progress and interview stages</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
-            <X className="w-5 h-5" />
-          </button>
+          {isModal && onClose && (
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -234,6 +227,21 @@ export function ApplicationTracker({ onClose, currentResume, currentJob }: Appli
             </div>
           )}
         </div>
+    </div>
+  );
+
+  if (!isModal) return trackerContent;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 sm:p-6" onClick={onClose}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="w-full max-w-4xl flex justify-center"
+        onClick={e => e.stopPropagation()}
+      >
+        {trackerContent}
       </motion.div>
     </div>
   );
