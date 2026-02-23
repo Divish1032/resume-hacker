@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "Resume Hacker | Open-Source AI ATS Resume Optimizer",
   description: "Free, open-source AI resume optimizer. Generate ATS-friendly resumes using local AI (Ollama) or cloud models (OpenAI, Claude, DeepSeek). Score your resume against job descriptions instantly.",
   keywords: ["AI resume builder", "ATS resume checker", "open-source resume generator", "local AI resume", "Ollama resume optimizer", "ATS score", "Next.js resume app"],

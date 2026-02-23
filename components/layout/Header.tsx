@@ -79,6 +79,7 @@ export function Header() {
   }, [store.provider, store.ollamaModels]);
 
   const handleProviderChange = (newProvider: ProviderType) => {
+    console.log("handleProviderChange fired", newProvider);
     store.setProvider(newProvider);
     const models = getModelOptions(newProvider);
     if (models.length > 0) {
@@ -109,6 +110,8 @@ export function Header() {
       }
     }
   };
+
+  console.log("Header Render:", { p: store.provider, m: store.selectedModel });
 
   return (
     <>
@@ -160,9 +163,9 @@ export function Header() {
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap justify-end">
             <div className="flex items-center gap-1.5 min-w-[110px] xs:min-w-[120px]">
               <Label className="text-[10px] xs:text-xs text-slate-500 shrink-0 hidden sm:inline">Provider</Label>
-              <Select value={store.provider} onValueChange={(v) => handleProviderChange(v as ProviderType)}>
+              <Select value={store.provider || "prompt-only"} onValueChange={(v) => handleProviderChange(v as ProviderType)}>
                 <SelectTrigger className="h-8 flex-1 sm:w-32 text-[10px] xs:text-xs border-slate-200 dark:border-slate-800 bg-background">
-                  <SelectValue />
+                  <SelectValue placeholder="Provider" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="prompt-only" className="text-xs">Prompt Only</SelectItem>
@@ -226,7 +229,7 @@ export function Header() {
                 <div className="flex items-center gap-1.5">
                   <Label className="text-[10px] xs:text-xs text-slate-500 shrink-0 hidden sm:inline">Model</Label>
                   <Select
-                    value={store.isCustomModel ? "__custom__" : store.selectedModel}
+                    value={store.isCustomModel ? "__custom__" : (store.selectedModel || "none")}
                     onValueChange={(val) => {
                       if (val === "__custom__") {
                         store.setIsCustomModel(true);
@@ -240,11 +243,12 @@ export function Header() {
                     }}
                   >
                     <SelectTrigger className="h-8 w-28 xs:w-32 sm:w-36 text-[10px] xs:text-xs border-slate-200 dark:border-slate-800 bg-background">
-                      <SelectValue>
+                      <SelectValue placeholder="Model">
                         {store.isCustomModel ? (store.customModelInput || "Custom") : store.selectedModel}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none" className="hidden" disabled>Select Model...</SelectItem>
                       {getModelOptions().map((m) => (
                         <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
                       ))}
