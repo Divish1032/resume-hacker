@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Sparkles, Loader2, RefreshCw, DownloadCloud, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Zap, ClipboardPaste, Share, ShieldCheck, X } from "lucide-react";
+import { Copy, Sparkles, Loader2, RefreshCw, DownloadCloud, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Zap, ClipboardPaste, Share, ShieldCheck, X, Briefcase } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { PdfTemplate } from "@/components/pdf/PdfDownloadButton";
 import { AtsReport } from "@/components/features/AtsReport";
@@ -23,6 +23,9 @@ import { generateCoverLetterPrompt } from "@/lib/cover-letter-prompt";
 import type { CoverLetterTone, CoverLetterLength } from "@/lib/cover-letter-prompt";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { ResumeSelector } from "@/components/features/ResumeSelector";
+import { ApplicationTracker } from "@/components/features/ApplicationTracker";
 
 
 const PdfDownloadButton = dynamic(
@@ -109,6 +112,7 @@ export default function Home() {
   const [configuredProviders, setConfiguredProviders] = useState<Record<string, boolean>>({});
   const [showKeyBanner, setShowKeyBanner] = useState(false);
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
+  const [showAppTracker, setShowAppTracker] = useState(false);
 
   // ATS scores
   const preAtsScore = useMemo(() => {
@@ -418,8 +422,24 @@ export default function Home() {
             <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="text-base font-bold text-slate-900 tracking-tight">Resume Hacker</span>
-            <span className="hidden sm:inline text-xs text-slate-400 border border-slate-200 px-1.5 py-0.5 rounded-md">AI-powered ATS optimizer</span>
+            <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Resume Hacker</span>
+            <span className="hidden sm:inline text-xs text-slate-400 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded-md">AI-powered ATS optimizer</span>
+            <div className="ml-1 sm:ml-2">
+              <ThemeToggle />
+            </div>
+            <div className="ml-1 sm:ml-3 border-l border-slate-200 dark:border-slate-800 pl-1 sm:pl-3 flex items-center gap-1 sm:gap-2">
+              <ResumeSelector
+                currentData={resumeData}
+                onLoad={(data, id) => {
+                  setResumeData(data);
+                  setOriginalResumeData(data);
+                }}
+              />
+              <Button variant="outline" size="sm" onClick={() => setShowAppTracker(true)} className="h-8 gap-1.5 border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
+                <Briefcase className="w-3.5 h-3.5 text-indigo-500" />
+                <span className="hidden sm:inline">Tracker</span>
+              </Button>
+            </div>
           </div>
 
           {/* Controls */}
@@ -972,6 +992,16 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <AnimatePresence>
+        {showAppTracker && (
+          <ApplicationTracker
+            onClose={() => setShowAppTracker(false)}
+            currentResume={resumeData}
+            currentJob={jobData}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
