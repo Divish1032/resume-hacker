@@ -8,6 +8,9 @@ export interface SavedResume {
   name: string;
   updatedAt: number;
   data: ResumeData;
+  originalData?: ResumeData | null;
+  jobData?: any | null; // Using any here to prevent cyclic import if JobDescriptionData is not available, or we can use the proper type.
+  jobText?: string;
 }
 
 export type ApplicationStatus = "Bookmarked" | "Applied" | "Interviewing" | "Offer" | "Rejected";
