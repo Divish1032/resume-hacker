@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Sparkles, Loader2, RefreshCw, DownloadCloud, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Zap, ClipboardPaste, Share } from "lucide-react";
+import { Copy, Sparkles, Loader2, RefreshCw, DownloadCloud, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Zap, ClipboardPaste, Share, ShieldCheck, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { PdfTemplate } from "@/components/pdf/PdfDownloadButton";
 import { AtsReport } from "@/components/features/AtsReport";
@@ -103,9 +103,11 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
+  const [isOllamaAvailable, setIsOllamaAvailable] = useState(true); // assume true until proven otherwise
   const [selectedTemplate, setSelectedTemplate] = useState<PdfTemplate>("sidebar");
   const [jobText, setJobText] = useState<string>("");
   const [configuredProviders, setConfiguredProviders] = useState<Record<string, boolean>>({});
+  const [showKeyBanner, setShowKeyBanner] = useState(false);
 
   // ATS scores
   const preAtsScore = useMemo(() => {
@@ -123,9 +125,12 @@ export default function Home() {
     try {
       const res = await fetch("/api/ollama/tags");
       const data = await res.json();
+      // `available` tells us if Ollama is reachable (false on Vercel/serverless)
+      if (data.available === false) setIsOllamaAvailable(false);
+      else setIsOllamaAvailable(true);
       return data.models?.map((m: { name: string }) => m.name.replace(":latest", "")) || [];
-    } catch (e) {
-      console.error(e);
+    } catch {
+      setIsOllamaAvailable(false);
       return [];
     }
   };
@@ -383,6 +388,25 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
+      {/* ── Security banner ─────────────────────────────────────────── */}
+      {showKeyBanner && (
+        <div className="relative flex items-center justify-center gap-2.5 bg-emerald-600 text-white text-xs px-4 py-2.5">
+          <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+          <span>
+            <strong>Your API key is safe.</strong> It is stored only in your browser (localStorage) and sent directly to the provider. We never store or log it on our servers.
+          </span>
+          <button
+            onClick={() => {
+              setShowKeyBanner(false);
+              localStorage.setItem("rh_key_banner_dismissed", "1");
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+            aria-label="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
       {/* ── Topbar ──────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-6 h-14 flex items-center justify-between gap-4">
@@ -406,7 +430,9 @@ export default function Home() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="prompt-only">Prompt Only</SelectItem>
-                  <SelectItem value="ollama">Ollama (Local)</SelectItem>
+                  {isOllamaAvailable && (
+                    <SelectItem value="ollama">Ollama (Local)</SelectItem>
+                  )}
                   <SelectItem value="openai">OpenAI</SelectItem>
                   <SelectItem value="anthropic">Anthropic</SelectItem>
                   <SelectItem value="google">Gemini</SelectItem>
@@ -432,8 +458,13 @@ export default function Home() {
                       const val = e.target.value;
                       setApiKey(val);
                       if (typeof window !== "undefined") {
-                        if (val) localStorage.setItem(`rh_apikey_${provider}`, val);
-                        else localStorage.removeItem(`rh_apikey_${provider}`);
+                        if (val) {
+                          localStorage.setItem(`rh_apikey_${provider}`, val);
+                          // Show security banner the first time a key is typed
+                          if (!localStorage.getItem("rh_key_banner_dismissed")) setShowKeyBanner(true);
+                        } else {
+                          localStorage.removeItem(`rh_apikey_${provider}`);
+                        }
                       }
                     }}
                     placeholder={configuredProviders[provider] ? "Override…" : "sk-..."}

@@ -27,6 +27,15 @@ export async function POST(req: Request) {
     return jsonError("Prompt is required and cannot be empty", 400);
   }
 
+  // ── Serverless guard: Ollama requires a local server, not available on Vercel ──
+  const isServerless = process.env.VERCEL === "1" || process.env.VERCEL_ENV !== undefined;
+  if (isServerless && (provider === "ollama" || !provider)) {
+    return jsonError(
+      "Ollama is only available when running locally. Please select a cloud provider (OpenAI, Anthropic, Gemini, DeepSeek) and enter your API key.",
+      400
+    );
+  }
+
   if (!model || typeof model !== "string" || !model.trim()) {
     return jsonError("Model name is required. Please select a model from the settings.", 400);
   }
@@ -75,9 +84,13 @@ export async function POST(req: Request) {
         break;
       }
       case 'ollama':
-      default:
         modelInstance = ollama(model);
         break;
+      default:
+        return jsonError(
+          `Unknown provider "${provider}". Please select a valid provider from the settings.`,
+          400
+        );
     }
   } catch (err) {
     console.error("Failed to initialize model:", err);
