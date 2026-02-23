@@ -7,7 +7,7 @@ Thank you for your interest in contributing! Resume Hacker is an open-source AI 
 1. **Fork & Clone**
 
    ```bash
-   git clone https://github.com/yourusername/resume-hacker.git
+   git clone https://github.com/Divish1032/resume-hacker.git
    cd resume-hacker
    ```
 

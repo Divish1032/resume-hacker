@@ -1,8 +1,8 @@
-# ✨ Resume Hacker
+# ✨ Resume Hacker: Free Open-Source AI Resume Optimizer & ATS Scorer
 
-**Resume Hacker** is an open-source AI resume optimizer that tailors your resume to a specific job description — maximizing your ATS (Applicant Tracking System) match score and helping you stand out to recruiters.
+**Resume Hacker** is a free, privacy-first, open-source AI resume builder and ATS checker. It uses advanced locally-hosted AI (Ollama) or secure cloud endpoints (OpenAI, Claude, DeepSeek) to tailor your resume to any specific job description. Maximize your Application Tracking System (ATS) match score and easily bypass HR screeners.
 
-![Resume Hacker UI](public/screenshot.png)
+![Resume Hacker UI preview showing AI ATS scoring](public/screenshot.png)
 
 ## 🚀 Features
 
@@ -18,6 +18,17 @@
 - **Prompt-Only Mode** — Generate an optimized prompt to paste into ChatGPT or Claude yourself
 - **Frictionless Mobile UX** — Installable as a Progressive Web App (PWA) with native OS "Share" sheet integrations and direct deep-links to ChatGPT and Claude apps, bypassing clunky mobile clipboards.
 - **Bulletproof Validation** — Industry-standard error handling with Zod schema validation, pre-flight CTA UI guards, strict API validation, and auto-recovery for Ollama connection drops
+
+## 💡 Frequently Asked Questions (FAQ)
+
+**Is my resume data kept private?**  
+Yes. If you choose to use Ollama models (like LLaMA-3 or Mistral), your resume text _never_ leaves your machine. The entire optimization happens locally. If you opt to use an external API like OpenAI, data is only sent for that single completion request.
+
+**How does the ATS Scorer work?**  
+It uses a robust, heuristic-based algorithm running client-side. Instead of a basic keyword dump, it accurately categorizes Hard Skills vs Soft Skills, checks for quantifiable metrics (numbers/percentages), and validates Action Verbs, outputting specific missing keywords directly into the AI generation prompt.
+
+**Can I modify the prompt?**  
+Yes! We have a "Prompt-Only Mode" where you can use our built-in ATS heuristics to generate a mega-prompt. You can copy this and paste it directly into your favorite web-based LLM if you don't want to enter your API keys.
 
 ## 🛠 Tech Stack
 
@@ -39,11 +50,11 @@
 ### Steps
 
 ```bash
-# 1. Clone
-git clone https://github.com/yourusername/resume-hacker.git
+# 1. Clone the open-source resume optimizer
+git clone https://github.com/Divish1032/resume-hacker.git
 cd resume-hacker
 
-# 2. Install
+# 2. Install dependencies
 npm install
 
 # 3. Configure environment (optional — only needed for cloud AI providers)
