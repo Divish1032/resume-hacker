@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - 2026-02-23
+## [1.1.1] - 2026-02-23
+
+### Added
+
+- **Project Roadmap** — Created `docs/roadmap-v2.md` to document future feature plans (Job Tracker, Interview Prep, LinkedIn Assistant)
+
+### Changed
+
+- **README "First Impression" Audit** — Modernised the README with a bold value proposition and a copy-pasteable "Quick Start" guide for developers
+- Fixed version regression (updated to `v1.1.1` after `v1.1.0`)
+
+---
 
 ### Added
 
@@ -44,5 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Prompt-only mode** — copy the raw LLM prompt to use in any external AI tool
 - **Dark/light theming**, responsive layout, and smooth animations via Framer Motion
 
+[1.1.1]: https://github.com/Divish1032/resume-hacker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Divish1032/resume-hacker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Divish1032/resume-hacker/releases/tag/v1.0.0
