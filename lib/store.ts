@@ -44,7 +44,7 @@ export interface AppState {
     data: ResumeData | null, 
     id: string | null, 
     originalData?: ResumeData | null, 
-    jobData?: any | null, 
+    jobData?: JobDescriptionData | null, 
     jobText?: string
   ) => void;
 }

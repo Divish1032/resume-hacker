@@ -275,7 +275,7 @@ export default function Home() {
   }, [hasOutput, hasPromptOutput]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background font-sans transition-colors duration-200">
+    <div className="h-screen flex flex-col bg-background font-sans transition-colors duration-200 overflow-hidden">
             {/* ── Page Header ── */}
       <div className="w-full mx-auto px-4 sm:px-6 py-4 pb-2 flex items-center justify-between">
         <div>
@@ -318,7 +318,7 @@ export default function Home() {
       </div>
 
       {/* ── 3-Zone Layout ───────────────────────────────────────────── */}
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-3.5rem)] overflow-y-auto lg:overflow-hidden min-h-0">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-y-auto lg:overflow-hidden min-h-0">
 
         {/* ── ZONE 1: Resume Form ──────────────────────────────────── */}
         <div className={`${mobileStep === 1 ? "block" : "hidden lg:block"} h-full min-h-0`}>
@@ -428,7 +428,7 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar min-h-0">
 
             {/* ─── Resume Tab ──────────────────────────────────────────── */}
             {zone3Tab === "resume" && (
@@ -599,17 +599,16 @@ export default function Home() {
                       </div>
                     </div>
                     {originalResumeData && resumeData && resumeData !== originalResumeData && jobText && (
-                      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-4">
-                          <ScoreDeltaBanner before={preAtsScore?.total ?? 0} after={postAtsScore?.total ?? 0} />
-                          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2 mt-4 mb-2">
-                            <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />Optimized ATS Score Breakdown
-                          </div>
-                          <AtsReport score={postAtsScore!} />
-                          <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
-                            <Button
-                              variant="outline"
-                              size="sm"
+                      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 pb-4">
+                        <ScoreDeltaBanner before={preAtsScore?.total ?? 0} after={postAtsScore?.total ?? 0} />
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2 mt-4 mb-2">
+                          <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />Optimized ATS Score Breakdown
+                        </div>
+                        <AtsReport score={postAtsScore!} />
+                        <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
                               className="w-full sm:w-auto h-8 text-xs gap-2 border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100"
                               onClick={() => {
                                 const newApp = {
@@ -629,7 +628,6 @@ export default function Home() {
                               Save to Tracker
                             </Button>
                           </div>
-                        </div>
                         {resumeData.personalInfo?.fullName && (
                           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3 mt-4">
                             <div className="flex items-center gap-2 flex-1">

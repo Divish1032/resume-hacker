@@ -1,4 +1,4 @@
-import { ResumeData } from "./schema";
+import { ResumeData, JobDescriptionData } from "./schema";
 
 const RESUMES_STORAGE_KEY = "rh_saved_resumes";
 const APPLICATIONS_STORAGE_KEY = "rh_job_applications";
@@ -9,7 +9,7 @@ export interface SavedResume {
   updatedAt: number;
   data: ResumeData;
   originalData?: ResumeData | null;
-  jobData?: any | null; // Using any here to prevent cyclic import if JobDescriptionData is not available, or we can use the proper type.
+  jobData?: JobDescriptionData | null;
   jobText?: string;
 }
 
