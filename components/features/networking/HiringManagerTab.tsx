@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { useNetworkingAI } from "@/hooks/useNetworkingAI";
-import { generateHiringManagerBypassPrompt } from "@/lib/prompt-engine";
+import { generateHiringManagerBypassPrompt } from "@/lib/prompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Search, Target, Zap, ExternalLink } from "lucide-react";

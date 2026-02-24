@@ -13,14 +13,14 @@ import { Copy, Sparkles, Loader2, TrendingUp, ArrowRight, ChevronDown, ChevronUp
 import { useAppStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { CoverLetterPanel } from "@/components/features/CoverLetterPanel";
-import { generateCoverLetterPrompt } from "@/lib/cover-letter-prompt";
-import type { CoverLetterTone, CoverLetterLength } from "@/lib/cover-letter-prompt";
+import { generateCoverLetterPrompt } from "@/lib/prompts";
+import type { CoverLetterTone, CoverLetterLength } from "@/lib/prompts";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { PdfTemplate } from "@/components/pdf/PdfDownloadButton";
 import { AtsReport } from "@/components/features/AtsReport";
 import { scoreResume } from "@/lib/ats-scorer";
-import { generatePrompt } from "@/lib/prompt-engine";
+import { generatePrompt } from "@/lib/prompts";
 import { useCompletion } from "@ai-sdk/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { saveJobApplication, ApplicationStatus } from "@/lib/storage";
@@ -93,6 +93,7 @@ export default function Home() {
   // Cover letter state
   const [clTone, setClTone] = useState<CoverLetterTone>("professional");
   const [clLength, setClLength] = useState<CoverLetterLength>("standard");
+  const [clUserHacks, setClUserHacks] = useState<string>("");
   const [clFinalText, setClFinalText] = useState<string>("");
   const [clPromptText, setClPromptText] = useState<string>("");
 
@@ -192,7 +193,7 @@ export default function Home() {
       return;
     }
     const clPrompt = generateCoverLetterPrompt(
-      resumeData!, jobData, { tone: clTone, length: clLength }
+      resumeData!, jobData, { tone: clTone, length: clLength }, clUserHacks
     );
     setClFinalText("");
     setClCompletion("");
@@ -732,6 +733,8 @@ export default function Home() {
               <CoverLetterPanel
                 tone={clTone}
                 length={clLength}
+                userHacks={clUserHacks}
+                onUserHacksChange={setClUserHacks}
                 onToneChange={setClTone}
                 onLengthChange={setClLength}
                 onGenerate={handleClGenerate}

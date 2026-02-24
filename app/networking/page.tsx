@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Network, Copy, CheckCircle2, RefreshCw, Briefcase, UserCircle, Send, Target, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { generateNetworkingPrompt } from "@/lib/prompt-engine";
+import { generateNetworkingPrompt } from "@/lib/prompts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HiringManagerTab } from "@/components/features/networking/HiringManagerTab";
 import { PainPointOutreachTab } from "@/components/features/networking/PainPointOutreachTab";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { useInterviewAI } from "@/hooks/useInterviewAI";
-import { generateObjectionHandlingPrompt } from "@/lib/prompt-engine";
+import { generateObjectionHandlingPrompt } from "@/lib/prompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ShieldAlert, AlertTriangle, MessageSquareQuote, Zap } from "lucide-react";

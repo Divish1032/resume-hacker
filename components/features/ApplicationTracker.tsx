@@ -22,7 +22,7 @@ import {
   RefreshCw 
 } from "lucide-react";
 import { useFollowUpAI } from "@/hooks/useFollowUpAI";
-import { generateFollowUpEmailPrompt } from "@/lib/prompt-engine";
+import { generateFollowUpEmailPrompt } from "@/lib/prompts";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
@@ -49,18 +49,25 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
   
   const [activeFollowUpApp, setActiveFollowUpApp] = useState<JobApplication | null>(null);
   const [followUpResponse, setFollowUpResponse] = useState<{subject: string, body: string} | null>(null);
+  const [trackerUserHacks, setTrackerUserHacks] = useState("");
   const { generateWithAI, isLoading, error } = useFollowUpAI();
 
-  const startFollowUp = async (app: JobApplication) => {
+  const openFollowUpModal = (app: JobApplication) => {
     setActiveFollowUpApp(app);
+    setFollowUpResponse(null);
+    setTrackerUserHacks("");
+  };
+
+  const executeFollowUpAI = async () => {
+    if (!activeFollowUpApp) return;
     setFollowUpResponse(null);
     if (!resumeData) {
       toast.error("Please load a resume in the Optimizer first.");
       return;
     }
 
-    const days = Math.max(0, Math.floor((Date.now() - app.date) / (1000 * 60 * 60 * 24)));
-    const prompt = generateFollowUpEmailPrompt(resumeData, { text: `${app.title} at ${app.company}. ${app.notes}` }, days);
+    const days = Math.max(0, Math.floor((Date.now() - activeFollowUpApp.date) / (1000 * 60 * 60 * 24)));
+    const prompt = generateFollowUpEmailPrompt(resumeData, { text: `${activeFollowUpApp.title} at ${activeFollowUpApp.company}. ${activeFollowUpApp.notes}` }, days, trackerUserHacks);
     
     if (provider === "prompt-only") {
       setFollowUpResponse({
@@ -186,7 +193,7 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
               ) : error ? (
                 <div className="text-center py-8 text-red-500">
                   <p className="text-sm">{error}</p>
-                  <Button variant="outline" size="sm" className="mt-4 border-red-200 text-red-700" onClick={() => startFollowUp(activeFollowUpApp)}>Try Again</Button>
+                  <Button variant="outline" size="sm" className="mt-4 border-red-200 text-red-700" onClick={executeFollowUpAI}>Try Again</Button>
                 </div>
               ) : followUpResponse ? (
                 <div className="space-y-4">
@@ -210,12 +217,27 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                     >
                       <Copy className="w-4 h-4 mr-2" /> Copy Email
                     </Button>
-                    <Button variant="outline" onClick={() => startFollowUp(activeFollowUpApp)}>
+                    <Button variant="outline" onClick={executeFollowUpAI}>
                       <RefreshCw className="w-4 h-4 mr-2" /> Regenerate
                     </Button>
                   </div>
                 </div>
-              ) : null}
+              ) : (
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Custom AI Hacks (Optional)</Label>
+                    <textarea
+                      value={trackerUserHacks}
+                      onChange={(e) => setTrackerUserHacks(e.target.value)}
+                      placeholder="E.g., Emphasize my enthusiasm for their recent product launch, or write in a casual tone..."
+                      className="w-full h-20 text-[13px] p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-emerald-500 custom-scrollbar outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 transition-all"
+                    />
+                  </div>
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" onClick={executeFollowUpAI}>
+                    <Zap className="w-4 h-4 mr-2" /> Generate Email
+                  </Button>
+                </div>
+              )}
             </div>
           ) : isEditing ? (
             <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 space-y-4">
@@ -359,7 +381,7 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    startFollowUp(app);
+                                    openFollowUpModal(app);
                                   }}
                                 >
                                   <Mail className="w-4 h-4" />

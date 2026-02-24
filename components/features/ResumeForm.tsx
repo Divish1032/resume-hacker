@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Trash2, FileText, X, Loader2, Copy, Upload, Award, Globe, BookOpen, Heart, BadgeCheck } from "lucide-react";
 import { useEffect, useState } from "react";
-import { generateResumePrompt } from "@/lib/prompt-utils";
+import { generateResumePrompt } from "@/lib/prompts";
 import { toast } from "sonner";
 
 interface ResumeFormProps {

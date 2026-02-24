@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { useInterviewAI } from "@/hooks/useInterviewAI";
-import { generate306090PlanPrompt } from "@/lib/prompt-engine";
+import { generate306090PlanPrompt } from "@/lib/prompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CalendarDays, CheckCircle2, Zap } from "lucide-react";

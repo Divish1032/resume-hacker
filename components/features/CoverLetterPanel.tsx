@@ -6,12 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Loader2, Copy, Download, RefreshCw, CheckCheck,
 } from "lucide-react";
-import type { CoverLetterTone, CoverLetterLength } from "@/lib/cover-letter-prompt";
+import type { CoverLetterTone, CoverLetterLength } from "@/lib/prompts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CoverLetterPanelProps {
   tone: CoverLetterTone;
   length: CoverLetterLength;
+  userHacks: string;
+  onUserHacksChange: (v: string) => void;
   onToneChange: (t: CoverLetterTone) => void;
   onLengthChange: (l: CoverLetterLength) => void;
   onGenerate: () => void;
@@ -69,7 +71,7 @@ function RadioCard<T extends string>({
 }
 
 export function CoverLetterPanel({
-  tone, length, onToneChange, onLengthChange,
+  tone, length, userHacks, onUserHacksChange, onToneChange, onLengthChange,
   onGenerate, onRegenerate, isLoading, streamText, finalText, onFinalTextChange,
   canGenerate, isPromptOnly, promptText,
 }: CoverLetterPanelProps) {
@@ -106,6 +108,27 @@ export function CoverLetterPanel({
       <div className="space-y-1.5">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Length</p>
         <RadioCard options={LENGTHS} value={length} onChange={onLengthChange} color="emerald" />
+      </div>
+
+      {/* Custom AI Hacks */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Custom AI Hacks (Optional)</p>
+          <Tooltip>
+            <TooltipTrigger>
+              <div className="w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] flex items-center justify-center cursor-help">?</div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs max-w-xs leading-relaxed">
+              Use this cheatsheet to override the AI. Tell it to mention a specific past project, focus heavily on a certain skill, or even write in the style of Shakespeare.
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <textarea
+          value={userHacks}
+          onChange={(e) => onUserHacksChange(e.target.value)}
+          placeholder="E.g., Emphasize my AWS certification, mention I'm willing to relocate, or write it like a pirate..."
+          className="w-full h-20 text-[13px] p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-indigo-500 custom-scrollbar outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 transition-all"
+        />
       </div>
 
       {/* Generate button */}

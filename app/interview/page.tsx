@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, MessageSquareQuote, CheckCircle2, ChevronRight, Zap, RefreshCw, MessageCircleQuestion, CalendarDays, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
-import { generateInterviewQuestionsPrompt, generateStarFlashcardPrompt } from "@/lib/prompt-engine";
+import { generateInterviewQuestionsPrompt, generateStarFlashcardPrompt } from "@/lib/prompts";
 import { ReverseQuestionsTab } from "@/components/features/interview/ReverseQuestionsTab";
 import { Plan306090Tab } from "@/components/features/interview/Plan306090Tab";
 import { ObjectionHandlingTab } from "@/components/features/interview/ObjectionHandlingTab";

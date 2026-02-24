@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { useInterviewAI } from "@/hooks/useInterviewAI";
-import { generateReverseQuestionsPrompt } from "@/lib/prompt-engine";
+import { generateReverseQuestionsPrompt } from "@/lib/prompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, MessageCircleQuestion, HelpCircle, Zap } from "lucide-react";
