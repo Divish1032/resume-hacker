@@ -6,14 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, MessageCircleQuestion, HelpCircle, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { ResumeData, JobDescriptionData } from "@/lib/schema";
 
 interface ReverseQuestion {
   question: string;
   rationale: string;
 }
 
-export function ReverseQuestionsTab() {
-  const { resumeData, jobData, provider } = useAppStore();
+interface ReverseQuestionsTabProps {
+  overrideResumeData?: ResumeData | null;
+  overrideJobData?: JobDescriptionData | null;
+}
+
+export function ReverseQuestionsTab({ overrideResumeData, overrideJobData }: ReverseQuestionsTabProps = {}) {
+  const store = useAppStore();
+  const { provider } = store;
+  const resumeData = overrideResumeData ?? store.resumeData;
+  const jobData = overrideJobData ?? store.jobData;
   const { generateWithAI, isLoading } = useInterviewAI();
   const [questions, setQuestions] = useState<ReverseQuestion[]>([]);
   const [promptOnlyText, setPromptOnlyText] = useState("");

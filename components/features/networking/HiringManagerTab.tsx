@@ -4,8 +4,9 @@ import { useNetworkingAI } from "@/hooks/useNetworkingAI";
 import { generateHiringManagerBypassPrompt } from "@/lib/prompts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Search, Target, Zap, ExternalLink } from "lucide-react";
+import { Loader2, Search, Target, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { ResumeData, JobDescriptionData } from "@/lib/schema";
 
 interface BooleanSearch {
   search_string: string;
@@ -13,11 +14,20 @@ interface BooleanSearch {
   rationale: string;
 }
 
-export function HiringManagerTab() {
-  const { jobData, provider } = useAppStore();
+interface HiringManagerTabProps {
+  overrideResumeData?: ResumeData | null;
+  overrideJobData?: JobDescriptionData | null;
+}
+
+export function HiringManagerTab({ overrideResumeData, overrideJobData }: HiringManagerTabProps = {}) {
+  const store = useAppStore();
+  const { provider } = store;
+  const jobData = overrideJobData ?? store.jobData;
   const { generateWithAI, isLoading } = useNetworkingAI();
   const [searches, setSearches] = useState<BooleanSearch[]>([]);
   const [promptOnlyText, setPromptOnlyText] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void overrideResumeData;
 
   const handleGenerate = async () => {
     if (!jobData) return;

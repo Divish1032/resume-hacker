@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ShieldAlert, AlertTriangle, MessageSquareQuote, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { ResumeData, JobDescriptionData } from "@/lib/schema";
 
 interface ObjectionScript {
   objection: string;
@@ -13,8 +14,16 @@ interface ObjectionScript {
   script: string;
 }
 
-export function ObjectionHandlingTab() {
-  const { resumeData, jobData, provider } = useAppStore();
+interface ObjectionHandlingTabProps {
+  overrideResumeData?: ResumeData | null;
+  overrideJobData?: JobDescriptionData | null;
+}
+
+export function ObjectionHandlingTab({ overrideResumeData, overrideJobData }: ObjectionHandlingTabProps = {}) {
+  const store = useAppStore();
+  const { provider } = store;
+  const resumeData = overrideResumeData ?? store.resumeData;
+  const jobData = overrideJobData ?? store.jobData;
   const { generateWithAI, isLoading } = useInterviewAI();
   const [scripts, setScripts] = useState<ObjectionScript[]>([]);
   const [promptOnlyText, setPromptOnlyText] = useState("");

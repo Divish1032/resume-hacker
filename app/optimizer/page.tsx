@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Sparkles, Loader2, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Zap, ClipboardPaste, Share, Plus } from "lucide-react";
+import { Copy, Sparkles, Loader2, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Zap, ClipboardPaste, Share, Bookmark } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { CoverLetterPanel } from "@/components/features/CoverLetterPanel";
@@ -23,7 +23,8 @@ import { scoreResume } from "@/lib/ats-scorer";
 import { generatePrompt } from "@/lib/prompts";
 import { useCompletion } from "@ai-sdk/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { saveJobApplication, ApplicationStatus } from "@/lib/storage";
+import { getApplicationById } from "@/lib/storage";
+import { SaveApplicationDialog } from "@/components/features/SaveApplicationDialog";
 
 
 const PdfDownloadButton = dynamic(
@@ -79,13 +80,16 @@ function ScoreDeltaBanner({ before, after }: { before: number; after: number; })
 
 export default function Home() {
   const store = useAppStore();
-  const { resumeData, originalResumeData, jobData, jobText, provider, apiKey, selectedModel, configuredProviders } = store;
+  const { resumeData, originalResumeData, jobData, jobText, provider, apiKey, selectedModel, configuredProviders, activeApplicationId } = store;
   
   const [generatedPrompt, setGeneratedPrompt] = useState<string>("");
   const [fabricationLevel, setFabricationLevel] = useState<number[]>([30]);
   const [showChangelog, setShowChangelog] = useState(false);
   const [aiResponseText, setAiResponseText] = useState<string>("");
   const [promptCopied, setPromptCopied] = useState(false);
+
+  // Save application dialog
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   // Zone 3 tabs
   const [zone3Tab, setZone3Tab] = useState<"resume" | "cover-letter">("resume");
@@ -99,6 +103,12 @@ export default function Home() {
 
   const [selectedTemplate, setSelectedTemplate] = useState<PdfTemplate>("sidebar");
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
+
+  // Active saved application bundle (for version switching)
+  const activeSavedApp = useMemo(() => {
+    if (!activeApplicationId) return null;
+    return getApplicationById(activeApplicationId) ?? null;
+  }, [activeApplicationId, showSaveDialog]);
 
   // ATS scores
   const preAtsScore = useMemo(() => {
@@ -274,21 +284,55 @@ export default function Home() {
     }
   }, [hasOutput, hasPromptOutput]);
 
+  const canSave = !!(resumeData && jobData && originalResumeData);
+
   return (
     <div className="h-screen flex flex-col bg-background font-sans transition-colors duration-200 overflow-hidden">
+      {/* ── Save Application Dialog ── */}
+      {showSaveDialog && canSave && (
+        <SaveApplicationDialog
+          open={showSaveDialog}
+          onOpenChange={setShowSaveDialog}
+          originalResumeData={originalResumeData!}
+          optimizedResumeData={resumeData!}
+          jobText={jobText}
+          jobData={jobData!}
+          atsScore={postAtsScore?.total}
+          fabricationLevel={fabricationLevel[0]}
+          existingApplicationId={activeApplicationId}
+          onSaved={(appId, versionId) => {
+            store.setActiveApplicationId(appId);
+            store.setActiveSavedVersionId(versionId);
+          }}
+        />
+      )}
+
             {/* ── Page Header ── */}
       <div className="w-full mx-auto px-4 sm:px-6 py-4 pb-2 flex items-center justify-between">
         <div>
            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Resume Optimizer</h1>
            <p className="text-sm text-slate-500">Tailor your resume for the ATS in seconds.</p>
         </div>
-        <Button
-            onClick={handleGenerate}
-            disabled={!canGenerate}
-            className="hidden lg:flex bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm"
-        >
-          {isLoading ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : <><Zap className="w-3.5 h-3.5 mr-1.5" />{provider === "prompt-only" ? "Generate Prompt" : "Optimize Resume"}</>}
-        </Button>
+        <div className="hidden lg:flex items-center gap-2">
+          {canSave && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSaveDialog(true)}
+              className="h-9 gap-1.5 border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              {activeApplicationId ? "Save Version" : "Save Application"}
+            </Button>
+          )}
+          <Button
+              onClick={handleGenerate}
+              disabled={!canGenerate}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm"
+          >
+            {isLoading ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : <><Zap className="w-3.5 h-3.5 mr-1.5" />{provider === "prompt-only" ? "Generate Prompt" : "Optimize Resume"}</>}
+          </Button>
+        </div>
       </div>
 
       {/* ── Mobile Stepper Navigation ── */}
@@ -400,7 +444,7 @@ export default function Home() {
         <div ref={zone3Ref} className={`${mobileStep === 3 ? "block" : "hidden lg:block"} rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full min-h-0`}>
           <div className={`h-1 ${zone3Tab === "cover-letter" ? "bg-violet-500" : "bg-emerald-500"}`} />
           {/* Tab bar header */}
-          <div className="border-b border-slate-100 dark:border-slate-800 flex items-center px-2 shrink-0">
+          <div className="border-b border-slate-100 dark:border-slate-800 flex items-center px-2 shrink-0 gap-1 flex-wrap">
             <button
               onClick={() => setZone3Tab("resume")}
               className={`flex items-center gap-1.5 px-3 py-3 text-xs font-semibold border-b-2 transition-colors mr-1 ${
@@ -426,6 +470,28 @@ export default function Home() {
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-500 ml-0.5" />
               )}
             </button>
+            {/* ── Version switcher — appears when a saved app has multiple versions ── */}
+            {activeSavedApp && activeSavedApp.versions.length > 1 && zone3Tab === "resume" && (
+              <div className="ml-auto flex items-center gap-1 pr-2">
+                {activeSavedApp.versions.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => {
+                      store.setActiveSavedVersionId(v.id);
+                      store.setResumeData(v.resumeData);
+                      toast.success(`Switched to ${v.label}`);
+                    }}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${
+                      store.activeSavedVersionId === v.id
+                        ? "bg-indigo-600 text-white border-transparent"
+                        : "border-slate-300 dark:border-slate-700 text-slate-500 hover:border-indigo-400"
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar min-h-0">
@@ -606,28 +672,16 @@ export default function Home() {
                         </div>
                         <AtsReport score={postAtsScore!} />
                         <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                              className="w-full sm:w-auto h-8 text-xs gap-2 border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100"
-                              onClick={() => {
-                                const newApp = {
-                                  id: crypto.randomUUID(),
-                                  title: jobText.split('\n')[0].substring(0, 50) || "Job Target",
-                                  company: "Unknown Company",
-                                  url: "",
-                                  status: "preparing" as ApplicationStatus,
-                                  date: Date.now(),
-                                  notes: jobText
-                                };
-                                saveJobApplication(newApp);
-                                toast.success("Added to Tracker!");
-                              }}
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                              Save to Tracker
-                            </Button>
-                          </div>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                               className="w-full sm:w-auto h-8 text-xs gap-2 border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100"
+                               onClick={() => setShowSaveDialog(true)}
+                             >
+                               <Bookmark className="w-3.5 h-3.5" />
+                               {activeApplicationId ? "Save as New Version" : "Save Application"}
+                             </Button>
+                           </div>
                         {resumeData.personalInfo?.fullName && (
                           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3 mt-4">
                             <div className="flex items-center gap-2 flex-1">

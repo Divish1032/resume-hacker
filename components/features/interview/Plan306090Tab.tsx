@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CalendarDays, CheckCircle2, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { ResumeData, JobDescriptionData } from "@/lib/schema";
 
 interface Plan306090 {
   title: string;
@@ -14,8 +15,16 @@ interface Plan306090 {
   day90: string[];
 }
 
-export function Plan306090Tab() {
-  const { resumeData, jobData, provider } = useAppStore();
+interface Plan306090TabProps {
+  overrideResumeData?: ResumeData | null;
+  overrideJobData?: JobDescriptionData | null;
+}
+
+export function Plan306090Tab({ overrideResumeData, overrideJobData }: Plan306090TabProps = {}) {
+  const store = useAppStore();
+  const { provider } = store;
+  const resumeData = overrideResumeData ?? store.resumeData;
+  const jobData = overrideJobData ?? store.jobData;
   const { generateWithAI, isLoading } = useInterviewAI();
   const [plan, setPlan] = useState<Plan306090 | null>(null);
   const [promptOnlyText, setPromptOnlyText] = useState("");

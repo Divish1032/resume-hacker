@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getJobApplications, saveJobApplication, deleteJobApplication, JobApplication, ApplicationStatus } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,27 +47,38 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
   const [isEditing, setIsEditing] = useState(false);
   const [editingApp, setEditingApp] = useState<Partial<JobApplication>>({});
   
-  const [activeFollowUpApp, setActiveFollowUpApp] = useState<JobApplication | null>(null);
+  const activeFollowUpApp = useRef<JobApplication | null>(null);
+  const [_followUpApp, setFollowUpAppState] = useState<JobApplication | null>(null);
+  // use a ref so the setter doesn't trigger re-renders for unchanged state
+  const setActiveFollowUpApp = (app: JobApplication | null) => {
+    activeFollowUpApp.current = app;
+    setFollowUpAppState(app);
+  };
   const [followUpResponse, setFollowUpResponse] = useState<{subject: string, body: string} | null>(null);
   const [trackerUserHacks, setTrackerUserHacks] = useState("");
+
+  // Inline delete confirmation: stores the id of the application pending deletion
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   const { generateWithAI, isLoading, error } = useFollowUpAI();
 
   const openFollowUpModal = (app: JobApplication) => {
-    setActiveFollowUpApp(app);
+    activeFollowUpApp.current = app;
+    setFollowUpAppState(app);
     setFollowUpResponse(null);
     setTrackerUserHacks("");
   };
 
   const executeFollowUpAI = async () => {
-    if (!activeFollowUpApp) return;
+    if (!activeFollowUpApp.current) return;
     setFollowUpResponse(null);
     if (!resumeData) {
       toast.error("Please load a resume in the Optimizer first.");
       return;
     }
 
-    const days = Math.max(0, Math.floor((Date.now() - activeFollowUpApp.date) / (1000 * 60 * 60 * 24)));
-    const prompt = generateFollowUpEmailPrompt(resumeData, { text: `${activeFollowUpApp.title} at ${activeFollowUpApp.company}. ${activeFollowUpApp.notes}` }, days, trackerUserHacks);
+    const days = Math.max(0, Math.floor((Date.now() - activeFollowUpApp.current.date) / (1000 * 60 * 60 * 24)));
+    const prompt = generateFollowUpEmailPrompt(resumeData, { text: `${activeFollowUpApp.current.title} at ${activeFollowUpApp.current.company}. ${activeFollowUpApp.current.notes}` }, days, trackerUserHacks);
     
     if (provider === "prompt-only") {
       setFollowUpResponse({
@@ -131,12 +142,11 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this tracked application?")) {
-      deleteJobApplication(id);
-      refreshApps();
-      toast.success("Deleted application");
-      onUpdate?.();
-    }
+    deleteJobApplication(id);
+    setPendingDeleteId(null);
+    refreshApps();
+    toast.success("Application deleted");
+    onUpdate?.();
   };
 
   const getStatusColor = (status: ApplicationStatus) => {
@@ -172,7 +182,7 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
 
         {/* Content */}
         <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-          {activeFollowUpApp ? (
+          {_followUpApp ? (
             <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center justify-between mb-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div>
@@ -180,7 +190,7 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                     <Mail className="w-4 h-4 text-emerald-500" />
                     1-Click Follow Up
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">Generating a personalized email for {activeFollowUpApp.company}</p>
+                  <p className="text-xs text-slate-500 mt-1">Generating a personalized email for {_followUpApp!.company}</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setActiveFollowUpApp(null)}>Close</Button>
               </div>
@@ -413,11 +423,11 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="h-8 w-8 text-slate-400 hover:text-red-500"
+                                  className={`h-8 w-8 transition-colors ${pendingDeleteId === app.id ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-slate-400 hover:text-red-500'}`}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleDelete(app.id);
+                                    setPendingDeleteId(pendingDeleteId === app.id ? null : app.id);
                                   }}
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -426,6 +436,22 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                               <TooltipContent>Delete</TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
+
+                          {/* Inline confirm strip */}
+                          {pendingDeleteId === app.id && (
+                            <div className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-2 py-1">
+                              <span className="text-[10px] font-semibold text-red-600 mr-1 whitespace-nowrap">Delete?</span>
+                              <button
+                                className="text-[10px] font-bold text-red-600 hover:underline"
+                                onClick={(e) => { e.stopPropagation(); handleDelete(app.id); }}
+                              >Yes</button>
+                              <span className="text-red-300">·</span>
+                              <button
+                                className="text-[10px] font-bold text-slate-500 hover:underline"
+                                onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
+                              >No</button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Mail, Send, Copy, AlertCircle, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { ResumeData, JobDescriptionData } from "@/lib/schema";
 
 interface OutreachMessage {
   pain_point_hypothesis: string;
@@ -13,8 +14,16 @@ interface OutreachMessage {
   message: string;
 }
 
-export function PainPointOutreachTab() {
-  const { resumeData, jobData, provider } = useAppStore();
+interface PainPointOutreachTabProps {
+  overrideResumeData?: ResumeData | null;
+  overrideJobData?: JobDescriptionData | null;
+}
+
+export function PainPointOutreachTab({ overrideResumeData, overrideJobData }: PainPointOutreachTabProps = {}) {
+  const store = useAppStore();
+  const { provider } = store;
+  const resumeData = overrideResumeData ?? store.resumeData;
+  const jobData = overrideJobData ?? store.jobData;
   const { generateWithAI, isLoading } = useNetworkingAI();
   const [messages, setMessages] = useState<OutreachMessage[]>([]);
   const [promptOnlyText, setPromptOnlyText] = useState("");

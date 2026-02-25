@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Network, Copy, CheckCircle2, RefreshCw, Briefcase, UserCircle, Send, Target, Mail } from "lucide-react";
@@ -10,6 +10,8 @@ import { generateNetworkingPrompt } from "@/lib/prompts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HiringManagerTab } from "@/components/features/networking/HiringManagerTab";
 import { PainPointOutreachTab } from "@/components/features/networking/PainPointOutreachTab";
+import { SavedApplicationSelector, ApplicationContext } from "@/components/features/SavedApplicationSelector";
+import { ResumeData, JobDescriptionData } from "@/lib/schema";
 
 interface OutreachTemplate {
   type: string;
@@ -25,7 +27,12 @@ interface NetworkingResponse {
 
 export default function NetworkingPage() {
   const store = useAppStore();
-  const { resumeData, jobData, provider, selectedModel: model, apiKey, isHydrated } = store;
+  const { resumeData: storeResumeData, jobData: storeJobData, provider, selectedModel: model, apiKey, isHydrated } = store;
+
+  const [appContext, setAppContext] = useState<ApplicationContext | null>(null);
+
+  const resumeData: ResumeData | null = appContext?.resolvedResumeData ?? storeResumeData;
+  const jobData: JobDescriptionData | null = appContext?.jobData ?? storeJobData;
   
   const [response, setResponse] = useState<NetworkingResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -133,7 +140,17 @@ export default function NetworkingPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="profile_maker" className="space-y-8 mt-12 w-full">
+      {/* ── Saved Application Selector ───────────────────────────────── */}
+      <SavedApplicationSelector
+        onSelect={(ctx) => {
+          setAppContext(ctx);
+          setResponse(null);
+          setNetworkingPrompt("");
+        }}
+        sourceLabel="Resume to use for networking"
+      />
+
+      <Tabs defaultValue="profile_maker" className="space-y-4 w-full">
         <div className="flex justify-center flex-wrap">
           <TabsList className="bg-slate-100 dark:bg-slate-900/50 p-1 border border-slate-200 dark:border-slate-800">
             <TabsTrigger value="profile_maker" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 flex items-center gap-2"><UserCircle className="w-4 h-4 text-blue-500" /> Web Presence</TabsTrigger>
@@ -321,11 +338,11 @@ export default function NetworkingPage() {
         </TabsContent>
 
         <TabsContent value="bypass" className="mt-0 focus-visible:outline-none focus-visible:ring-0 w-full">
-            <HiringManagerTab />
+            <HiringManagerTab overrideResumeData={resumeData} overrideJobData={jobData} />
         </TabsContent>
 
         <TabsContent value="outreach" className="mt-0 focus-visible:outline-none focus-visible:ring-0 w-full">
-            <PainPointOutreachTab />
+            <PainPointOutreachTab overrideResumeData={resumeData} overrideJobData={jobData} />
         </TabsContent>
       </Tabs>
     </div>
