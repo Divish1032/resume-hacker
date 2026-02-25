@@ -49,7 +49,6 @@ export const viewport: Viewport = {
 
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 export default function RootLayout({
@@ -64,12 +63,9 @@ export default function RootLayout({
           <TooltipProvider>
             <div className="flex h-screen w-full">
               <Sidebar />
-              <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Header />
-                <main className="flex-1 overflow-y-auto">
-                  {children}
-                </main>
-              </div>
+              <main className="flex-1 overflow-y-auto min-w-0">
+                {children}
+              </main>
             </div>
           </TooltipProvider>
           <Toaster />
