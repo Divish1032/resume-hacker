@@ -18,7 +18,7 @@
 
 ### Quick Demo
 
-![Resume Hacker Action Demo](public/demo.gif)
+![Resume Hacker Action Demo](public/demo.webp)
 
 ## ⚡ Quick Start
 
