@@ -233,6 +233,13 @@ export function ResumeForm({ onDataChange, defaultValues, provider, model, apiKe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(values), onDataChange]);
 
+  // Update form when defaultValues (from store) change
+  useEffect(() => {
+    if (defaultValues) {
+      form.reset(defaultValues as ResumeData);
+    }
+  }, [defaultValues]);
+
   const { fields: workFields, append: appendWork, remove: removeWork } = useFieldArray({
     control,
     name: "workExperience",

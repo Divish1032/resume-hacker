@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Sparkles, Loader2, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Zap, ClipboardPaste, Share, Bookmark } from "lucide-react";
+import { Copy, Sparkles, Loader2, TrendingUp, ArrowRight, ChevronDown, ChevronUp, Zap, ClipboardPaste, Share, Bookmark, FolderOpen } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { CoverLetterPanel } from "@/components/features/CoverLetterPanel";
@@ -25,6 +25,7 @@ import { useCompletion } from "@ai-sdk/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getApplicationById } from "@/lib/storage";
 import { SaveApplicationDialog } from "@/components/features/SaveApplicationDialog";
+import { LoadApplicationDialog } from "@/components/features/LoadApplicationDialog";
 
 
 const PdfDownloadButton = dynamic(
@@ -90,6 +91,7 @@ export default function Home() {
 
   // Save application dialog
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
 
   // Zone 3 tabs
   const [zone3Tab, setZone3Tab] = useState<"resume" | "cover-letter">("resume");
@@ -307,6 +309,31 @@ export default function Home() {
         />
       )}
 
+      {/* ── Load Application Dialog ── */}
+      {showLoadDialog && (
+        <LoadApplicationDialog
+          open={showLoadDialog}
+          onOpenChange={setShowLoadDialog}
+          onSelect={(app) => {
+            store.setActiveApplicationId(app.id);
+            store.setActiveSavedVersionId(app.activeVersionId);
+            store.setOriginalResumeData(app.originalResumeData);
+            store.setJobData(app.jobData);
+            store.setJobText(app.jobText);
+            
+            // Load the active version's resume data
+            const activeVersion = app.versions.find(v => v.id === app.activeVersionId) || app.versions[app.versions.length - 1];
+            if (activeVersion) {
+              store.setResumeData(activeVersion.resumeData);
+            } else {
+              store.setResumeData(app.originalResumeData);
+            }
+            
+            toast.success(`Loaded "${app.name}" context`);
+          }}
+        />
+      )}
+
             {/* ── Page Header ── */}
       <div className="w-full mx-auto px-4 sm:px-6 py-4 pb-2 flex items-center justify-between">
         <div>
@@ -314,6 +341,15 @@ export default function Home() {
            <p className="text-sm text-slate-500">Tailor your resume for the ATS in seconds.</p>
         </div>
         <div className="hidden lg:flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowLoadDialog(true)}
+            className="h-9 gap-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            Load
+          </Button>
           {canSave && (
             <Button
               variant="outline"
