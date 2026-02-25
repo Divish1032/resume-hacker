@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getJobApplications, saveJobApplication, deleteJobApplication, JobApplication, ApplicationStatus } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,13 @@ import {
   Link as LinkIcon, 
   Edit2, 
   ExternalLink, 
-  Zap 
+  Zap,
+  Mail,
+  Copy,
+  RefreshCw 
 } from "lucide-react";
+import { useFollowUpAI } from "@/hooks/useFollowUpAI";
+import { generateFollowUpEmailPrompt } from "@/lib/prompts";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useAppStore } from "@/lib/store";
@@ -37,9 +42,55 @@ interface ApplicationTrackerProps {
 
 export function ApplicationTracker({ onClose, isModal = true, onUpdate }: ApplicationTrackerProps) {
   const router = useRouter();
+  const { resumeData, provider } = useAppStore();
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingApp, setEditingApp] = useState<Partial<JobApplication>>({});
+  
+  const activeFollowUpApp = useRef<JobApplication | null>(null);
+  const [_followUpApp, setFollowUpAppState] = useState<JobApplication | null>(null);
+  // use a ref so the setter doesn't trigger re-renders for unchanged state
+  const setActiveFollowUpApp = (app: JobApplication | null) => {
+    activeFollowUpApp.current = app;
+    setFollowUpAppState(app);
+  };
+  const [followUpResponse, setFollowUpResponse] = useState<{subject: string, body: string} | null>(null);
+  const [trackerUserHacks, setTrackerUserHacks] = useState("");
+
+  // Inline delete confirmation: stores the id of the application pending deletion
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const { generateWithAI, isLoading, error } = useFollowUpAI();
+
+  const openFollowUpModal = (app: JobApplication) => {
+    activeFollowUpApp.current = app;
+    setFollowUpAppState(app);
+    setFollowUpResponse(null);
+    setTrackerUserHacks("");
+  };
+
+  const executeFollowUpAI = async () => {
+    if (!activeFollowUpApp.current) return;
+    setFollowUpResponse(null);
+    if (!resumeData) {
+      toast.error("Please load a resume in the Optimizer first.");
+      return;
+    }
+
+    const days = Math.max(0, Math.floor((Date.now() - activeFollowUpApp.current.date) / (1000 * 60 * 60 * 24)));
+    const prompt = generateFollowUpEmailPrompt(resumeData, { text: `${activeFollowUpApp.current.title} at ${activeFollowUpApp.current.company}. ${activeFollowUpApp.current.notes}` }, days, trackerUserHacks);
+    
+    if (provider === "prompt-only") {
+      setFollowUpResponse({
+        subject: "(Prompt Only Mode) Required AI Prompt:",
+        body: prompt
+      });
+      return;
+    }
+
+    const res = await generateWithAI(prompt);
+    if (res) setFollowUpResponse(res);
+  };
 
   useEffect(() => {
     refreshApps();
@@ -91,12 +142,11 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this tracked application?")) {
-      deleteJobApplication(id);
-      refreshApps();
-      toast.success("Deleted application");
-      onUpdate?.();
-    }
+    deleteJobApplication(id);
+    setPendingDeleteId(null);
+    refreshApps();
+    toast.success("Application deleted");
+    onUpdate?.();
   };
 
   const getStatusColor = (status: ApplicationStatus) => {
@@ -132,7 +182,74 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
 
         {/* Content */}
         <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-          {isEditing ? (
+          {_followUpApp ? (
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 space-y-4">
+              <div className="flex items-center justify-between mb-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-emerald-500" />
+                    1-Click Follow Up
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">Generating a personalized email for {_followUpApp!.company}</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setActiveFollowUpApp(null)}>Close</Button>
+              </div>
+
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                   <RefreshCw className="w-8 h-8 text-emerald-500 animate-spin mb-4" />
+                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Writing custom follow up...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8 text-red-500">
+                  <p className="text-sm">{error}</p>
+                  <Button variant="outline" size="sm" className="mt-4 border-red-200 text-red-700" onClick={executeFollowUpAI}>Try Again</Button>
+                </div>
+              ) : followUpResponse ? (
+                <div className="space-y-4">
+                  <div className="bg-white dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                     <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Subject</p>
+                     <p className="text-sm font-medium text-slate-900 dark:text-white mb-4">{followUpResponse.subject}</p>
+                     
+                     <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Body</p>
+                     <div className="text-sm text-slate-700 dark:text-slate-300 font-serif whitespace-pre-wrap">
+                       {followUpResponse.body}
+                     </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button 
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Subject: ${followUpResponse.subject}\n\n${followUpResponse.body}`);
+                        toast.success("Copied to clipboard!");
+                      }}
+                    >
+                      <Copy className="w-4 h-4 mr-2" /> Copy Email
+                    </Button>
+                    <Button variant="outline" onClick={executeFollowUpAI}>
+                      <RefreshCw className="w-4 h-4 mr-2" /> Regenerate
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Custom AI Hacks (Optional)</Label>
+                    <textarea
+                      value={trackerUserHacks}
+                      onChange={(e) => setTrackerUserHacks(e.target.value)}
+                      placeholder="E.g., Emphasize my enthusiasm for their recent product launch, or write in a casual tone..."
+                      className="w-full h-20 text-[13px] p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-1 focus:ring-emerald-500 custom-scrollbar outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 transition-all"
+                    />
+                  </div>
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" onClick={executeFollowUpAI}>
+                    <Zap className="w-4 h-4 mr-2" /> Generate Email
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : isEditing ? (
             <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-slate-900 dark:text-white">
@@ -270,6 +387,24 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
+                                  className="h-8 w-8 text-slate-400 hover:text-emerald-500"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openFollowUpModal(app);
+                                  }}
+                                >
+                                  <Mail className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>1-Click Follow Up</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
                                   className="h-8 w-8 text-slate-400 hover:text-indigo-500"
                                   onClick={(e) => {
                                     e.preventDefault();
@@ -288,11 +423,11 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="h-8 w-8 text-slate-400 hover:text-red-500"
+                                  className={`h-8 w-8 transition-colors ${pendingDeleteId === app.id ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-slate-400 hover:text-red-500'}`}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleDelete(app.id);
+                                    setPendingDeleteId(pendingDeleteId === app.id ? null : app.id);
                                   }}
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -301,6 +436,22 @@ export function ApplicationTracker({ onClose, isModal = true, onUpdate }: Applic
                               <TooltipContent>Delete</TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
+
+                          {/* Inline confirm strip */}
+                          {pendingDeleteId === app.id && (
+                            <div className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-2 py-1">
+                              <span className="text-[10px] font-semibold text-red-600 mr-1 whitespace-nowrap">Delete?</span>
+                              <button
+                                className="text-[10px] font-bold text-red-600 hover:underline"
+                                onClick={(e) => { e.stopPropagation(); handleDelete(app.id); }}
+                              >Yes</button>
+                              <span className="text-red-300">·</span>
+                              <button
+                                className="text-[10px] font-bold text-slate-500 hover:underline"
+                                onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
+                              >No</button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

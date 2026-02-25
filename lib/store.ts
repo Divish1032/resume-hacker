@@ -14,7 +14,7 @@ export interface AppState {
   configuredProviders: Record<string, boolean>;
   isCustomModel: boolean;
   customModelInput: string;
-  
+
   // Active Content
   resumeData: ResumeData | null;
   originalResumeData: ResumeData | null;
@@ -23,6 +23,10 @@ export interface AppState {
   jobText: string;
   isHydrated: boolean;
   setHydrated: (val: boolean) => void;
+
+  // Saved Application bundle tracking
+  activeApplicationId: string | null;
+  activeSavedVersionId: string | null;
 
   // Actions
   setProvider: (provider: ProviderType) => void;
@@ -33,18 +37,21 @@ export interface AppState {
   setConfiguredProviders: (providers: Record<string, boolean>) => void;
   setIsCustomModel: (isCustom: boolean) => void;
   setCustomModelInput: (input: string) => void;
-  
+
   setResumeData: (data: ResumeData | null) => void;
   setOriginalResumeData: (data: ResumeData | null) => void;
   setActiveResumeId: (id: string | null) => void;
   setJobData: (data: JobDescriptionData | null) => void;
   setJobText: (text: string) => void;
 
+  setActiveApplicationId: (id: string | null) => void;
+  setActiveSavedVersionId: (id: string | null) => void;
+
   loadResume: (
-    data: ResumeData | null, 
-    id: string | null, 
-    originalData?: ResumeData | null, 
-    jobData?: any | null, 
+    data: ResumeData | null,
+    id: string | null,
+    originalData?: ResumeData | null,
+    jobData?: JobDescriptionData | null,
     jobText?: string
   ) => void;
 }
@@ -66,6 +73,8 @@ export const useAppStore = create<AppState>()(
       activeResumeId: null,
       jobData: null,
       jobText: "",
+      activeApplicationId: null,
+      activeSavedVersionId: null,
 
       setProvider: (provider) => set({ provider }),
       setApiKey: (apiKey) => set({ apiKey }),
@@ -81,21 +90,25 @@ export const useAppStore = create<AppState>()(
       setActiveResumeId: (activeResumeId) => set({ activeResumeId }),
       setJobData: (jobData) => set({ jobData }),
       setJobText: (jobText) => set({ jobText }),
+
+      setActiveApplicationId: (activeApplicationId) => set({ activeApplicationId }),
+      setActiveSavedVersionId: (activeSavedVersionId) => set({ activeSavedVersionId }),
+
       isHydrated: false,
       setHydrated: (isHydrated) => set({ isHydrated }),
 
-      loadResume: (data, id, originalData, jobData, jobText) => set({
-        resumeData: data,
-        originalResumeData: originalData || data,
-        activeResumeId: id,
-        jobData: jobData || null,
-        jobText: jobText || "",
-      }),
+      loadResume: (data, id, originalData, jobData, jobText) =>
+        set({
+          resumeData: data,
+          originalResumeData: originalData || data,
+          activeResumeId: id,
+          jobData: jobData || null,
+          jobText: jobText || "",
+        }),
     }),
     {
       name: "resume-hacker-store",
       storage: createJSONStorage(() => localStorage),
-      // Only persist specific fields if needed, but for now everything is small
       partialize: (state) => ({
         provider: state.provider,
         apiKey: state.apiKey,
@@ -104,6 +117,8 @@ export const useAppStore = create<AppState>()(
         jobData: state.jobData,
         jobText: state.jobText,
         activeResumeId: state.activeResumeId,
+        activeApplicationId: state.activeApplicationId,
+        activeSavedVersionId: state.activeSavedVersionId,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);
