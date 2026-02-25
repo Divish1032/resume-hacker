@@ -30,8 +30,8 @@ export function makeGenCacheKey(
   if (!resumeData) return "no_resume";
   const resumeSig = [
     resumeData.personalInfo?.fullName ?? "",
-    (resumeData.experience ?? []).map((e) => `${e.company}|${e.title}`).join(","),
-    (resumeData.skills ?? []).join(","),
+    (resumeData.workExperience ?? []).map((e) => `${e.company}|${e.jobTitle}`).join(","),
+    resumeData.skills ?? "",
   ].join("::");
   const jobSig = (jobData?.text ?? "").slice(0, 300);
   return djb2(resumeSig + "||" + jobSig);

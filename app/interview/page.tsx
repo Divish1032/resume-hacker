@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MessageSquareQuote, CheckCircle2, ChevronRight, Zap, RefreshCw, MessageCircleQuestion, CalendarDays, ShieldAlert } from "lucide-react";
+import { Loader2, MessageSquareQuote, CheckCircle2, ChevronRight, Zap, RefreshCw, MessageCircleQuestion, CalendarDays, ShieldAlert, PlusCircle, Clock, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { generateInterviewQuestionsPrompt, generateStarFlashcardPrompt } from "@/lib/prompts";
 import { ReverseQuestionsTab } from "@/components/features/interview/ReverseQuestionsTab";
@@ -13,6 +13,7 @@ import { Plan306090Tab } from "@/components/features/interview/Plan306090Tab";
 import { ObjectionHandlingTab } from "@/components/features/interview/ObjectionHandlingTab";
 import { SavedApplicationSelector, ApplicationContext } from "@/components/features/SavedApplicationSelector";
 import { ResumeData, JobDescriptionData } from "@/lib/schema";
+import { makeGenCacheKey, loadCache, saveCache, appendCache, clearCache, relativeTime } from "@/lib/generation-cache";
 
 interface InterviewQuestion {
   question: string;
@@ -28,11 +29,13 @@ interface StarResponse {
   tips: string;
 }
 
+const CACHE_TYPE = "interview_questions";
+const PAGE_SIZE = 8;
+
 export default function InterviewPrepPage() {
   const store = useAppStore();
   const { resumeData: storeResumeData, jobData: storeJobData, provider, selectedModel: model, apiKey, isHydrated } = store;
 
-  // Resolved context — either from saved app selector or current session
   const [appContext, setAppContext] = useState<ApplicationContext | null>(null);
 
   const resumeData: ResumeData | null = appContext?.resolvedResumeData ?? storeResumeData;
@@ -40,72 +43,100 @@ export default function InterviewPrepPage() {
 
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [isGeneratingMore, setIsGeneratingMore] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<InterviewQuestion | null>(null);
   const [starResponse, setStarResponse] = useState<StarResponse | null>(null);
   const [isGeneratingStar, setIsGeneratingStar] = useState(false);
   const [questionsPrompt, setQuestionsPrompt] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [cacheKey, setCacheKey] = useState<string>("");
+  const [cachedAt, setCachedAt] = useState<number | null>(null);
+  // Pagination
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  useEffect(() => { setMounted(true); }, []);
+
+  // Recompute cache key and load from cache whenever resume/job changes
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (!isHydrated) return;
+    const key = makeGenCacheKey(resumeData, jobData);
+    setCacheKey(key);
+    setVisibleCount(PAGE_SIZE);
 
-  // Reset questions when context changes
+    const cached = loadCache<InterviewQuestion>(CACHE_TYPE, key);
+    if (cached && cached.items.length > 0) {
+      setQuestions(cached.items);
+      setCachedAt(cached.savedAt);
+      setSelectedQuestion(null);
+      setStarResponse(null);
+    } else {
+      setQuestions([]);
+      setCachedAt(null);
+    }
+  }, [resumeData, jobData, isHydrated]);
+
   const handleContextSelect = useCallback((ctx: ApplicationContext | null) => {
     setAppContext(ctx);
-    setQuestions([]);
     setSelectedQuestion(null);
     setStarResponse(null);
     setQuestionsPrompt("");
   }, []);
 
+  /** Fetch questions from the API and return parsed array */
+  const fetchQuestions = async (): Promise<InterviewQuestion[]> => {
+    const prompt = generateInterviewQuestionsPrompt(resumeData!, jobData!);
+
+    if (provider === "prompt-only") {
+      setQuestionsPrompt(prompt);
+      return [];
+    }
+
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      body: JSON.stringify({ prompt, provider: provider || "ollama", model, apiKey }),
+    });
+    if (!res.ok) throw new Error("Failed to generate questions");
+
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let accum = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      accum += decoder.decode(value, { stream: true });
+    }
+    const jsonMatch = accum.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("Invalid response format from AI");
+    return JSON.parse(jsonMatch[0]) as InterviewQuestion[];
+  };
+
+  /** Full regenerate — clears cache */
   const generateQuestions = async () => {
     if (!resumeData || !jobData) {
       toast.error("Please ensure you have loaded a resume and job description.");
       return;
     }
-
-    const prompt = generateInterviewQuestionsPrompt(resumeData, jobData);
-
     if (provider === "prompt-only") {
+      const prompt = generateInterviewQuestionsPrompt(resumeData, jobData);
       setQuestionsPrompt(prompt);
       setQuestions([]);
       setSelectedQuestion(null);
       setStarResponse(null);
       return;
     }
-
     setIsGeneratingQuestions(true);
     setQuestions([]);
     setSelectedQuestion(null);
     setStarResponse(null);
-
+    clearCache(CACHE_TYPE, cacheKey);
+    setCachedAt(null);
+    setVisibleCount(PAGE_SIZE);
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        body: JSON.stringify({ prompt, provider: provider || "ollama", model, apiKey }),
-      });
-
-      if (!res.ok) throw new Error("Failed to generate questions");
-      const stream = res.body;
-      if (!stream) throw new Error("No response stream");
-
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let accum = "";
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        accum += decoder.decode(value, { stream: true });
-      }
-
-      const jsonMatch = accum.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        setQuestions(parsed);
-      } else {
-        throw new Error("Invalid response format from AI");
-      }
+      const parsed = await fetchQuestions();
+      setQuestions(parsed);
+      saveCache(CACHE_TYPE, cacheKey, parsed);
+      setCachedAt(Date.now());
+      toast.success(`${parsed.length} questions generated & cached`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to generate questions. Please try again.");
@@ -114,9 +145,31 @@ export default function InterviewPrepPage() {
     }
   };
 
+  /** Append more without clearing existing cache */
+  const generateMoreQuestions = async () => {
+    if (!resumeData || !jobData) return;
+    setIsGeneratingMore(true);
+    try {
+      const newItems = await fetchQuestions();
+      if (newItems.length === 0) return;
+      // Deduplicate by question text
+      const existingTexts = new Set(questions.map((q) => q.question.toLowerCase()));
+      const unique = newItems.filter((q) => !existingTexts.has(q.question.toLowerCase()));
+      const merged = appendCache<InterviewQuestion>(CACHE_TYPE, cacheKey, unique);
+      setQuestions(merged);
+      setCachedAt(Date.now());
+      setVisibleCount((v) => v + unique.length);
+      toast.success(`${unique.length} new questions added`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to generate more questions.");
+    } finally {
+      setIsGeneratingMore(false);
+    }
+  };
+
   const generateStarFlashcard = async (questionObj: InterviewQuestion) => {
     if (!resumeData || !jobData) return;
-
     setSelectedQuestion(questionObj);
     setIsGeneratingStar(true);
     setStarResponse(null);
@@ -135,12 +188,8 @@ export default function InterviewPrepPage() {
         method: "POST",
         body: JSON.stringify({ prompt, provider: provider || "ollama", model, apiKey }),
       });
-
       if (!res.ok) throw new Error("Failed to generate STAR response");
-      const stream = res.body;
-      if (!stream) throw new Error("No response stream");
-
-      const reader = stream.getReader();
+      const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let accum = "";
       while (true) {
@@ -148,14 +197,11 @@ export default function InterviewPrepPage() {
         if (done) break;
         accum += decoder.decode(value, { stream: true });
       }
-
       const jsonMatch = accum.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         setStarResponse(parsed);
-        if (window.innerWidth < 1024) {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-        }
+        if (window.innerWidth < 1024) window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
       } else {
         throw new Error("Invalid response format from AI");
       }
@@ -170,6 +216,8 @@ export default function InterviewPrepPage() {
   if (!mounted || !isHydrated) return null;
 
   const isReady = !!resumeData && !!jobData?.text;
+  const visibleQuestions = questions.slice(0, visibleCount);
+  const hasMore = visibleCount < questions.length;
 
   return (
     <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 min-h-screen space-y-6">
@@ -184,26 +232,45 @@ export default function InterviewPrepPage() {
           <p className="text-slate-500 mt-2">Master your next interview with AI-generated mock questions and STAR method flashcards.</p>
         </div>
 
-        <Button
-          onClick={generateQuestions}
-          disabled={!isReady || isGeneratingQuestions}
-          className="bg-violet-600 hover:bg-violet-700 text-white shadow-sm self-start md:self-auto"
-        >
-          {isGeneratingQuestions ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Profile...</>
-          ) : (
-            <><Zap className="w-4 h-4 mr-2" /> {questions.length > 0 || questionsPrompt ? "Regenerate Questions" : "Generate Mock Interview"}</>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Cache status */}
+          {cachedAt && (
+            <span className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 py-1.5 rounded-lg">
+              <Clock className="w-3 h-3 text-emerald-500" />
+              Cached {relativeTime(cachedAt)}
+            </span>
           )}
-        </Button>
+
+          {/* Generate More — only when we already have questions */}
+          {questions.length > 0 && provider !== "prompt-only" && (
+            <Button
+              onClick={generateMoreQuestions}
+              disabled={isGeneratingMore || isGeneratingQuestions}
+              variant="outline"
+              className="gap-2 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+            >
+              {isGeneratingMore
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding...</>
+                : <><PlusCircle className="w-4 h-4" /> Generate More</>}
+            </Button>
+          )}
+
+          {/* Main generate/regenerate */}
+          <Button
+            onClick={generateQuestions}
+            disabled={!isReady || isGeneratingQuestions}
+            className="bg-violet-600 hover:bg-violet-700 text-white shadow-sm"
+          >
+            {isGeneratingQuestions
+              ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Profile...</>
+              : <><Zap className="w-4 h-4 mr-2" />{questions.length > 0 ? "Regenerate" : "Generate Mock Interview"}</>}
+          </Button>
+        </div>
       </div>
 
-      {/* ── Saved Application Selector ───────────────────────────────── */}
-      <SavedApplicationSelector
-        onSelect={handleContextSelect}
-        sourceLabel="Resume to use for interview prep"
-      />
+      {/* Saved Application Selector */}
+      <SavedApplicationSelector onSelect={handleContextSelect} sourceLabel="Resume to use for interview prep" />
 
-      {/* Context indicator when using session data */}
       {!appContext && isReady && (
         <div className="flex items-center gap-2 text-[11px] text-slate-400 px-1">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -236,12 +303,8 @@ export default function InterviewPrepPage() {
               <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
                 <p className="text-xs font-semibold mb-2 text-violet-600 uppercase">Question Generation Prompt</p>
                 <pre className="text-[10px] font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">{questionsPrompt}</pre>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-3 w-full border-violet-200 text-violet-700 hover:bg-violet-50"
-                  onClick={() => { navigator.clipboard.writeText(questionsPrompt); toast.success("Prompt copied!"); }}
-                >
+                <Button size="sm" variant="outline" className="mt-3 w-full border-violet-200 text-violet-700 hover:bg-violet-50"
+                  onClick={() => { navigator.clipboard.writeText(questionsPrompt); toast.success("Prompt copied!"); }}>
                   Copy Prompt &amp; Open AI
                 </Button>
               </div>
@@ -255,6 +318,8 @@ export default function InterviewPrepPage() {
                       const parsed = JSON.parse(e.target.value);
                       if (Array.isArray(parsed)) {
                         setQuestions(parsed);
+                        saveCache(CACHE_TYPE, cacheKey, parsed);
+                        setCachedAt(Date.now());
                         setQuestionsPrompt("");
                         toast.success("Questions loaded!");
                       }
@@ -284,15 +349,19 @@ export default function InterviewPrepPage() {
 
           <TabsContent value="mock" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
             <div className="grid lg:grid-cols-2 gap-8">
-              {/* Left Column: Questions List */}
+              {/* Left: Questions list with pagination */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                  Predicted Questions
-                  <span className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 py-0.5 px-2.5 rounded-full text-xs font-bold">{questions.length}</span>
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    Predicted Questions
+                    <span className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 py-0.5 px-2.5 rounded-full text-xs font-bold">
+                      {visibleCount < questions.length ? `${visibleCount}/${questions.length}` : questions.length}
+                    </span>
+                  </h3>
+                </div>
 
                 <div className="space-y-3">
-                  {questions.map((q, idx) => (
+                  {visibleQuestions.map((q, idx) => (
                     <Card
                       key={idx}
                       className={`cursor-pointer transition-all hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md ${selectedQuestion?.question === q.question ? "border-violet-500 ring-1 ring-violet-500 shadow-md bg-violet-50/50 dark:bg-violet-900/10" : "bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800"}`}
@@ -307,15 +376,42 @@ export default function InterviewPrepPage() {
                             <h4 className="font-medium text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-snug">{q.question}</h4>
                             <p className="text-xs text-slate-500 italic">Why they ask: {q.reasoning}</p>
                           </div>
-                          <ChevronRight className={`w-5 h-5 shrink-0 transition-transform ${selectedQuestion?.question === q.question ? "text-violet-500" : "text-slate-300 group-hover:text-violet-400"}`} />
+                          <ChevronRight className={`w-5 h-5 shrink-0 transition-transform ${selectedQuestion?.question === q.question ? "text-violet-500" : "text-slate-300"}`} />
                         </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
+
+                {/* Pagination — show more from cache */}
+                {hasMore && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 text-slate-600 dark:text-slate-400"
+                    onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    Show {Math.min(PAGE_SIZE, questions.length - visibleCount)} more
+                    <span className="text-slate-400 text-xs">({questions.length - visibleCount} remaining)</span>
+                  </Button>
+                )}
+
+                {/* Generate more from API */}
+                {!hasMore && questions.length > 0 && provider !== "prompt-only" && (
+                  <Button
+                    variant="outline"
+                    onClick={generateMoreQuestions}
+                    disabled={isGeneratingMore}
+                    className="w-full gap-2 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                  >
+                    {isGeneratingMore
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+                      : <><PlusCircle className="w-4 h-4" /> Generate More Questions</>}
+                  </Button>
+                )}
               </div>
 
-              {/* Right Column: STAR Flashcard */}
+              {/* Right: STAR flashcard */}
               <div className="space-y-4 lg:sticky lg:top-20 self-start">
                 <h3 className="font-semibold text-slate-900 dark:text-white">STAR Method Answer Builder</h3>
 
@@ -324,7 +420,7 @@ export default function InterviewPrepPage() {
                     <div className="space-y-2">
                       <CheckCircle2 className="w-8 h-8 text-slate-300 mx-auto" />
                       <p className="text-slate-500 font-medium">Select a question</p>
-                      <p className="text-xs text-slate-400">We'll help you build an answer using your resume experience.</p>
+                      <p className="text-xs text-slate-400">We&apos;ll help you build an answer using your resume experience.</p>
                     </div>
                   </div>
                 ) : isGeneratingStar ? (
@@ -338,7 +434,6 @@ export default function InterviewPrepPage() {
                     <div className="bg-violet-50 dark:bg-violet-900/20 p-5 sm:p-6 border-b border-violet-100 dark:border-violet-900/30">
                       <h4 className="font-bold text-slate-900 dark:text-white leading-snug">&quot;{selectedQuestion.question}&quot;</h4>
                     </div>
-
                     <div className="p-5 sm:p-6 space-y-5">
                       <div className="space-y-4">
                         <StarSection letter="S" title="Situation" content={starResponse.situation} color="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" />
@@ -346,7 +441,6 @@ export default function InterviewPrepPage() {
                         <StarSection letter="A" title="Action" content={starResponse.action} color="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400" />
                         <StarSection letter="R" title="Result" content={starResponse.result} color="bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400" />
                       </div>
-
                       <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 -mx-6 -mb-6 p-6">
                         <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Delivery Tips</p>
                         <p className="text-sm text-slate-700 dark:text-slate-300 italic flex items-start gap-2">
@@ -364,11 +458,9 @@ export default function InterviewPrepPage() {
           <TabsContent value="reverse" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
             <ReverseQuestionsTab overrideResumeData={resumeData} overrideJobData={jobData} />
           </TabsContent>
-
           <TabsContent value="plan" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
             <Plan306090Tab overrideResumeData={resumeData} overrideJobData={jobData} />
           </TabsContent>
-
           <TabsContent value="objection" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
             <ObjectionHandlingTab overrideResumeData={resumeData} overrideJobData={jobData} />
           </TabsContent>
@@ -381,9 +473,7 @@ export default function InterviewPrepPage() {
 function StarSection({ letter, title, content, color }: { letter: string; title: string; content: string; color: string }) {
   return (
     <div className="flex gap-4 items-start">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg shrink-0 ${color}`}>
-        {letter}
-      </div>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg shrink-0 ${color}`}>{letter}</div>
       <div>
         <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">{title}</h5>
         <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">{content}</p>
