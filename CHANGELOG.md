@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-02-25
+
+### Added
+
+- **Saved Application Loading** — You can now load any previously saved application bundle (resume + JD + optimized versions) back into the Optimizer to continue working.
+- **Improved Context Selectors** — Refactored the Saved Application Selectors in the Interview and Networking tabs into sleek, 1-click Radix Combobox dropdowns with search.
+- **AI Generation Caching** — Interview questions and Networking outreach messages are now cached locally. Pagination and page reloads are instantaneous.
+
+### Fixed
+
+- **Resume Versioning Duplication** — Saving an edited resume now correctly appends a new version (e.g., `v2`, `v3`) to the existing application rather than duplicating it.
+- **Form Data Binding** — Switching between resume versions in the Optimizer now instantly and correctly updates the text inputs in Zone 1.
+
+---
+
 ## [1.2.1] - 2026-02-24
 
 ### Added
