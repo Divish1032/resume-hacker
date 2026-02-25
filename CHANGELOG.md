@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] - 2026-02-26
+
+### Changed
+
+- **Documentation Update** — Replaced the legacy `.gif` demo in the README with a high-quality `.webp` animated recording of the v1.3.0 Optimizer workflow, reducing file size and improving visual clarity.
+- **Hero Image** — Updated the `screenshot.png` with the new design.
+
+---
+
 ## [1.3.0] - 2026-02-25
 
 ### Added
